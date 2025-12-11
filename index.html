@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نظام الإدارة المتكامل الاحترافي تطوير أحمد الطيب</title>
+
+    <!-- PWA Settings -->
+    <meta name="theme-color" content="#1e1b4b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="نظام الإدارة تطوير أحمد الطيب">
+    
+    <!-- Link to Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- iOS Icon (Placeholder) -->
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/924/924514.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- SheetJS (Excel Library) -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <!-- Icons & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            900: '#1e1b4b', // Deep Indigo
+                            800: '#312e81',
+                            600: '#4f46e5',
+                            500: '#6366f1',
+                            400: '#818cf8',
+                            50:  '#eef2ff'
+                        },
+                        accent: {
+                            500: '#f59e0b', // Amber for highlights
+                            600: '#d97706'
+                        },
+                        cafe: {
+                            600: '#8c6b5d', // Coffee color
+                            50: '#fdf8f6'
+                        },
+                        showroom: {
+                            600: '#0f766e', // Teal color
+                            50: '#f0fdfa'
+                        },
+                        success: {
+                            600: '#16a34a',
+                            50: '#f0fdf4'
+                        }
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background: #f8fafc; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Hide Number Arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Button Pulse */
+        .btn-pulse:active { transform: scale(0.95); }
+
+        /* Print Styles */
+        @media print {
+            body { background: white; overflow: visible; height: auto; }
+            header, aside, .no-print { display: none !important; }
+            #mainContainer { overflow: visible; position: static; }
+            #view-orders, #view-inventory, #view-expiry, #view-notes { position: static; display: block !important; }
+            table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+            th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
+            thead { background: #eee !important; -webkit-print-color-adjust: exact; }
+            .bg-red-50 { background-color: #ffebee !important; -webkit-print-color-adjust: exact; }
+            .bg-green-50 { background-color: #e8f5e9 !important; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden font-sans text-slate-800">
+
+<!-- GLOBAL HEADER -->
+<header class="bg-brand-900 text-white shadow-lg z-50 flex-shrink-0 no-print">
+    <div class="flex items-center justify-between px-4 py-3">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('home')">
+            <div class="w-10 h-10 rounded-xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center text-accent-500">
+                <i class="fa-solid fa-layer-group text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-black leading-none">نظام الإدارة المتكامل تطوير أحمد الطيب</h1>
+                <span class="text-[10px] text-slate-400 font-bold tracking-wide">نسخة تجريبية قابلة للتطوير V2.0</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button onclick="saveAllDataManual()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-brand-900/50 btn-pulse">
+                <i class="fa-solid fa-save"></i> <span class="hidden sm:inline">حفظ التغييرات</span>
+            </button>
+            <button onclick="goToHome()" class="bg-slate-700 hover:bg-slate-600 text-white w-10 h-10 rounded-xl flex items-center justify-center transition btn-pulse" title="الرئيسية">
+                <i class="fa-solid fa-house"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- MAIN CONTENT CONTAINER -->
+<div id="mainContainer" class="flex-1 overflow-hidden relative bg-slate-100">
+
+    <!-- VIEW: HOME (DASHBOARD) -->
+    <div id="view-home" class="absolute inset-0 flex flex-col items-center justify-center p-6 fade-in z-30 bg-slate-50 overflow-y-auto">
+        <div class="text-center mb-10">
+            <h2 class="text-3xl sm:text-4xl font-black text-brand-900 mb-2">لوحة القيادة والمتابعة</h2>
+            <p class="text-slate-500 font-medium">نظرة عامة على حالة العمل</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl">
+            <!-- Card 1: Inventory Stats -->
+            <div onclick="switchView('inventory')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-brand-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                    <span id="dash-inv-count" class="text-3xl font-black text-slate-800">0</span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-700">الجرد العام</h3>
+                <p class="text-xs text-slate-400 mt-1">إجمالي الأصناف المسجلة</p>
+            </div>
+
+            <!-- Card 2: Expiry Alerts -->
+            <div onclick="switchView('expiry')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-accent-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                 <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <span id="dash-exp-count" class="text-3xl font-black text-amber-600">0</span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-700">تنبيهات الصلاحية</h3>
+                <p class="text-xs text-slate-400 mt-1">دفعات تنتهي خلال 30 يوم</p>
+            </div>
+
+            <!-- Card 3: Notes -->
+            <div onclick="switchView('notes')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-emerald-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                 <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <span id="dash-notes-count" class="text-3xl font-black text-slate-800">0</span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-700">دليل القهوة</h3>
+                <p class="text-xs text-slate-400 mt-1">الوصفات والإيحاءات</p>
+            </div>
+
+            <!-- Card 4: Orders Stats -->
+            <div onclick="switchView('orders')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-purple-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                 <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-dolly"></i>
+                    </div>
+                    <span id="dash-orders-count" class="text-3xl font-black text-purple-600">0</span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-700">طلبات قيد الانتظار</h3>
+                <p class="text-xs text-slate-400 mt-1">تشمل المعرض والكافيه</p>
+            </div>
+        </div>
+        
+        <!-- Global Actions -->
+        <div class="mt-12 w-full max-w-5xl flex flex-col items-center">
+            <div class="flex gap-4 mb-4">
+                 <button onclick="document.getElementById('fileInputGlobal').click()" class="px-6 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition flex items-center gap-2 shadow-lg shadow-brand-500/30 btn-pulse">
+                    <i class="fa-solid fa-file-import"></i> استيراد (الجرد فقط)
+                </button>
+                <input type="file" id="fileInputGlobal" class="hidden" accept=".xlsx,.xls" onchange="handleGlobalImport(event)">
+                
+                <button onclick="exportGlobalData()" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition flex items-center gap-2 shadow-lg shadow-slate-500/30 btn-pulse">
+                    <i class="fa-solid fa-file-export"></i> تصدير (الجرد فقط)
+                </button>
+            </div>
+            <p class="text-xs text-slate-400">تلميح: استخدم قسم الطلبات لمتابعة المهام اليومية وإنجازها.</p>
+        </div>
+    </div>
+
+    <!-- VIEW: ORDERS (DEVELOPED) -->
+    <div id="view-orders" class="absolute inset-0 flex hidden bg-slate-100">
+        <!-- Sidebar Form -->
+        <aside class="w-full lg:w-[380px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl overflow-y-auto no-print">
+            <div class="p-5 bg-purple-50 border-b border-purple-100">
+                <h3 class="text-lg font-black text-purple-900 flex items-center gap-2">
+                    <i class="fa-solid fa-cart-plus"></i> إضافة طلب جديد
+                </h3>
+            </div>
+
+            <div class="p-5 flex flex-col gap-4">
+                <!-- Source Toggle -->
+                <div class="bg-slate-100 p-1 rounded-xl flex">
+                    <button onclick="setOrderSource('showroom')" id="btn-src-showroom" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all shadow-sm bg-white text-showroom-600">
+                        <i class="fa-solid fa-store"></i> المعرض
+                    </button>
+                    <button onclick="setOrderSource('cafe')" id="btn-src-cafe" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all text-slate-500 hover:text-cafe-600">
+                        <i class="fa-solid fa-mug-saucer"></i> الكافيه
+                    </button>
+                </div>
+
+                <!-- Form Fields -->
+                <div>
+                    <label class="text-[11px] font-bold text-slate-500 mb-1 block">رقم الطلب</label>
+                    <input id="ord-num" type="text" placeholder="مثلاً: PO-2024-001" class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-slate-500 mb-1 block">اسم المحمصة أو الشركة</label>
+                    <input id="ord-company" type="text" placeholder="اسم المورد..." class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-slate-500 mb-1 block">نوع الطلب</label>
+                    <select id="ord-type" class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none bg-white">
+                        <option value="أمر شراء">أمر شراء</option>
+                        <option value="طلب مواد">طلب مواد</option>
+                        <option value="طلب تحويل بين الفروع">طلب تحويل بين الفروع</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-slate-500 mb-1 block">تاريخ الطلب</label>
+                    <input id="ord-date" type="date" class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none">
+                </div>
+
+                <button onclick="addNewOrder()" class="w-full h-12 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-lg shadow-purple-600/20 transition btn-pulse mt-2">
+                    <i class="fa-solid fa-plus"></i> تسجيل الطلب
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content: Orders Lists -->
+        <main class="flex-1 overflow-hidden flex flex-col p-4 bg-slate-100">
+            <!-- Top Tabs -->
+            <div class="flex gap-4 mb-4 no-print">
+                <button onclick="switchOrdersTab('showroom')" id="tab-showroom" class="flex-1 py-3 bg-white rounded-xl shadow-sm border-2 border-transparent text-showroom-600 font-bold transition-all relative overflow-hidden group">
+                    <span class="relative z-10 flex items-center justify-center gap-2"><i class="fa-solid fa-store"></i> طلبات المعرض</span>
+                </button>
+                <button onclick="switchOrdersTab('cafe')" id="tab-cafe" class="flex-1 py-3 bg-white rounded-xl shadow-sm border-2 border-transparent text-slate-400 font-bold transition-all relative overflow-hidden group">
+                    <span class="relative z-10 flex items-center justify-center gap-2"><i class="fa-solid fa-mug-saucer"></i> طلبات الكافيه</span>
+                </button>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-1 overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center no-print">
+                    <h3 id="orders-list-title" class="font-bold text-slate-700">قائمة الطلبات الجارية</h3>
+                    <div class="flex gap-2 items-center">
+                        <button onclick="window.print()" class="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700"><i class="fa-solid fa-print"></i> طباعة</button>
+                         <span class="text-[10px] bg-red-100 text-red-600 px-2 py-1 rounded font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-circle-exclamation"></i> متأخر (> 7 أيام)
+                         </span>
+                    </div>
+                </div>
+                <div class="overflow-auto flex-1 p-4">
+                    <table class="w-full text-right text-xs sm:text-sm">
+                        <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10">
+                            <tr>
+                                <th class="p-3">الحالة</th>
+                                <th class="p-3">رقم الطلب</th>
+                                <th class="p-3">الجهة / المحمصة</th>
+                                <th class="p-3">نوع الطلب</th>
+                                <th class="p-3 text-center">تاريخ الطلب</th>
+                                <th class="p-3 text-center">المدة</th>
+                                <th class="p-3 text-center no-print">إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                    <!-- Empty State -->
+                    <div id="orders-empty" class="hidden flex flex-col items-center justify-center text-slate-300 py-10">
+                        <i class="fa-solid fa-folder-open text-4xl mb-3"></i>
+                        <p class="text-sm">لا توجد طلبات مسجلة في هذا القسم</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- VIEW: INVENTORY (الجرد) -->
+    <div id="view-inventory" class="absolute inset-0 flex hidden bg-slate-100">
+        <!-- Sidebar -->
+        <aside class="w-full lg:w-[400px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl no-print">
+            <!-- Search -->
+            <div class="p-5 bg-slate-50 border-b border-slate-200">
+                <h3 class="text-sm font-black text-brand-900 mb-2">إدارة الجرد</h3>
+                <div class="relative">
+                    <input id="inv-search" type="text" placeholder="باركود أو اسم..." class="w-full h-12 rounded-xl border-2 border-slate-200 px-10 text-sm font-bold focus:border-brand-500 outline-none transition" onkeyup="handleSearch('inventory', this.value)">
+                    <i class="fa-solid fa-barcode absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                </div>
+                <ul id="inv-results" class="hidden mt-2 bg-white rounded-xl shadow-lg border border-slate-100 max-h-40 overflow-y-auto z-50 absolute w-[90%] left-5"></ul>
+                
+                <div class="flex gap-2 mt-3">
+                    <button onclick="document.getElementById('fileInputInv').click()" class="flex-1 py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50">
+                        <i class="fa-solid fa-upload text-brand-500"></i> استيراد
+                    </button>
+                    <input type="file" id="fileInputInv" class="hidden" accept=".xlsx,.xls" onchange="handleInventoryImport(event)">
+                    <button onclick="exportInventoryData()" class="flex-1 py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50">
+                        <i class="fa-solid fa-download text-brand-500"></i> تصدير
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Item Card -->
+            <div id="inv-card" class="hidden flex-1 p-5 flex flex-col gap-4 overflow-y-auto">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
+                    <h2 id="inv-name" class="text-lg font-black text-brand-900 mb-1">اسم الصنف</h2>
+                    <span id="inv-code" class="text-xs font-mono text-slate-500 bg-white px-2 py-1 rounded border">CODE</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white p-3 rounded-xl border border-slate-100 text-center shadow-sm">
+                        <span class="text-[10px] text-slate-400 block mb-1">الكمية الحالية</span>
+                        <span id="inv-current-qty" class="text-2xl font-black text-slate-700">0</span>
+                    </div>
+                     <div class="bg-white p-3 rounded-xl border border-slate-100 text-center shadow-sm">
+                        <span class="text-[10px] text-slate-400 block mb-1">الكمية بالنظام</span>
+                        <span id="inv-sys-qty" class="text-2xl font-black text-slate-400">0</span>
+                    </div>
+                </div>
+
+                <div class="mt-auto bg-white p-4 rounded-2xl shadow-glass border border-slate-200">
+                    <div class="flex gap-2 mb-3">
+                        <button onclick="setInvMode('add')" id="btn-inv-add" class="flex-1 py-2 rounded-lg text-xs font-bold bg-brand-600 text-white transition-colors">إضافة (+)</button>
+                        <button onclick="setInvMode('sub')" id="btn-inv-sub" class="flex-1 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-500 transition-colors">خصم (-)</button>
+                    </div>
+                    <input id="inv-input-qty" type="number" class="w-full h-12 text-center text-xl font-bold border-2 border-slate-200 rounded-xl mb-3 focus:border-brand-500 outline-none" placeholder="الكمية">
+                    <button onclick="submitInventory()" class="w-full h-12 bg-brand-900 text-white rounded-xl font-bold hover:bg-brand-800 transition btn-pulse">تأكيد العملية</button>
+                </div>
+            </div>
+            
+            <div id="inv-empty" class="flex-1 flex flex-col items-center justify-center text-slate-300">
+                <i class="fa-solid fa-barcode text-4xl mb-3"></i>
+                <p class="text-sm">امسح الكود للبدء</p>
+            </div>
+        </aside>
+
+        <!-- Main Table Area -->
+        <main class="flex-1 overflow-hidden flex flex-col p-4">
+             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-1 overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center no-print">
+                    <h3 class="font-bold text-brand-900">سجل الجرد</h3>
+                    <button onclick="window.print()" class="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700"><i class="fa-solid fa-print"></i> طباعة</button>
+                </div>
+                <div class="overflow-auto flex-1">
+                    <table class="w-full text-right text-xs sm:text-sm">
+                        <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10">
+                            <tr>
+                                <th class="p-3">الكود</th>
+                                <th class="p-3">الصنف</th>
+                                <th class="p-3 text-center">النظام</th>
+                                <th class="p-3 text-center bg-blue-50 text-blue-800">الفعلي</th>
+                                <th class="p-3 text-center">الفارق</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inv-table-body" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+             </div>
+        </main>
+    </div>
+
+    <!-- VIEW: EXPIRY (تواريخ متعددة/Batches) -->
+    <div id="view-expiry" class="absolute inset-0 flex hidden bg-slate-100">
+        <!-- Sidebar -->
+        <aside class="w-full lg:w-[420px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl no-print">
+             <div class="p-5 bg-amber-50 border-b border-amber-100">
+                <h3 class="text-sm font-black text-amber-900 mb-2">إدارة التواريخ</h3>
+                <div class="relative">
+                    <input id="exp-search" type="text" placeholder="بحث عن صنف..." class="w-full h-12 rounded-xl border-2 border-amber-200 px-10 text-sm font-bold focus:border-amber-500 outline-none transition bg-white" onkeyup="handleSearch('expiry', this.value)">
+                    <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-amber-400"></i>
+                </div>
+                <ul id="exp-results" class="hidden mt-2 bg-white rounded-xl shadow-lg border border-slate-100 max-h-40 overflow-y-auto z-50 absolute w-[90%] left-5"></ul>
+                
+                <div class="flex gap-2 mt-3">
+                    <button onclick="document.getElementById('fileInputExp').click()" class="flex-1 py-2 bg-white border border-amber-200 rounded-lg text-[10px] font-bold text-amber-700 hover:bg-amber-50">
+                        <i class="fa-solid fa-upload"></i> استيراد
+                    </button>
+                    <input type="file" id="fileInputExp" class="hidden" accept=".xlsx,.xls" onchange="handleExpiryImport(event)">
+                    <button onclick="exportExpiryData()" class="flex-1 py-2 bg-white border border-amber-200 rounded-lg text-[10px] font-bold text-amber-700 hover:bg-amber-50">
+                        <i class="fa-solid fa-download"></i> تصدير
+                    </button>
+                </div>
+            </div>
+
+            <div id="exp-card" class="hidden flex-1 p-5 flex flex-col gap-4 overflow-y-auto">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <h2 id="exp-name" class="text-lg font-black text-slate-800">اسم الصنف</h2>
+                    <p class="text-xs text-slate-400 mt-1">إضافة تاريخ تحميص جديد</p>
+                </div>
+
+                <!-- Add Batch Form (DEVELOPED) -->
+                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100 space-y-3">
+                    <div>
+                        <label class="text-[11px] font-bold text-amber-800 mb-1 block">تاريخ التحميص (اليوم-الشهر-السنة)</label>
+                        <input id="exp-date" type="date" class="w-full h-10 rounded-lg border border-amber-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold text-amber-800 mb-1 block">مدة الصلاحية (أشهر)</label>
+                        <input id="exp-duration" type="number" value="12" class="w-full h-10 rounded-lg border border-amber-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold text-amber-800 mb-1 block">الكمية لهذه الدفعة</label>
+                        <input id="exp-qty" type="number" placeholder="مثلاً: 12" class="w-full h-10 rounded-lg border border-amber-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+                    </div>
+                    <button onclick="addBatch()" class="w-full h-10 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-sm transition mt-2 btn-pulse">
+                        <i class="fa-solid fa-plus"></i> إضافة التاريخ
+                    </button>
+                </div>
+
+                <!-- Existing Batches List (Mini) -->
+                <div class="flex-1">
+                    <h4 class="text-xs font-bold text-slate-500 mb-2">التواريخ المسجلة:</h4>
+                    <div id="exp-batches-list" class="space-y-2"></div>
+                </div>
+            </div>
+             <div id="exp-empty" class="flex-1 flex flex-col items-center justify-center text-slate-300">
+                <i class="fa-solid fa-calendar-days text-4xl mb-3"></i>
+                <p class="text-sm">اختر صنفاً لإدارة تواريخه</p>
+            </div>
+        </aside>
+
+        <!-- Expiry Overview Table -->
+        <main class="flex-1 overflow-hidden p-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 h-full flex flex-col">
+                 <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center no-print">
+                     <h3 class="font-bold text-slate-700">تقرير الصلاحية التفصيلي</h3>
+                     <button onclick="window.print()" class="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700"><i class="fa-solid fa-print"></i> طباعة</button>
+                 </div>
+                 <div class="overflow-auto flex-1">
+                     <table class="w-full text-right text-xs sm:text-sm">
+                         <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10">
+                             <tr>
+                                 <th class="p-3 w-32">الكود</th>
+                                 <th class="p-3">الصنف</th>
+                                 <th class="p-3 text-center">تاريخ التحميص</th>
+                                 <th class="p-3 text-center">تاريخ الانتهاء</th>
+                                 <th class="p-3 text-center">الكمية</th>
+                                 <th class="p-3 text-center">الحالة</th>
+                             </tr>
+                         </thead>
+                         <tbody id="exp-table-body" class="divide-y divide-slate-100"></tbody>
+                     </table>
+                 </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- VIEW: NOTES (الإيحاءات) -->
+    <div id="view-notes" class="absolute inset-0 flex hidden bg-slate-100">
+        <!-- Sidebar -->
+        <aside class="w-full lg:w-[400px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl no-print">
+             <div class="p-5 bg-emerald-50 border-b border-emerald-100">
+                <h3 class="text-sm font-black text-emerald-900 mb-2">سجل الإيحاءات</h3>
+                <div class="relative">
+                    <input id="note-search" type="text" placeholder="ابحث بالإيحاء..." class="w-full h-12 rounded-xl border-2 border-emerald-200 px-10 text-sm font-bold focus:border-emerald-500 outline-none transition bg-white" onkeyup="handleSearch('notes', this.value)">
+                    <i class="fa-solid fa-mug-hot absolute right-3 top-1/2 -translate-y-1/2 text-emerald-400"></i>
+                </div>
+                <ul id="note-results" class="hidden mt-2 bg-white rounded-xl shadow-lg border border-slate-100 max-h-40 overflow-y-auto z-50 absolute w-[90%] left-5"></ul>
+                
+                <div class="flex gap-2 mt-3">
+                    <button onclick="document.getElementById('fileInputNotes').click()" class="flex-1 py-2 bg-white border border-emerald-200 rounded-lg text-[10px] font-bold text-emerald-700 hover:bg-emerald-50">
+                        <i class="fa-solid fa-upload"></i> استيراد
+                    </button>
+                    <input type="file" id="fileInputNotes" class="hidden" accept=".xlsx,.xls" onchange="handleNotesImport(event)">
+                    <button onclick="exportNotesData()" class="flex-1 py-2 bg-white border border-emerald-200 rounded-lg text-[10px] font-bold text-emerald-700 hover:bg-emerald-50">
+                        <i class="fa-solid fa-download"></i> تصدير
+                    </button>
+                </div>
+            </div>
+
+            <div id="note-card" class="hidden flex-1 p-5 flex flex-col gap-4 overflow-y-auto">
+                 <div class="bg-white p-4 rounded-2xl border border-slate-200 text-center">
+                    <h2 id="note-name" class="text-lg font-black text-emerald-900 mb-1">اسم القهوة</h2>
+                    <span id="note-code" class="text-xs font-mono text-slate-400">CODE</span>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">اسم المحمصة</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-fire-burner absolute right-3 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                            <input id="note-roastery" type="text" class="w-full h-10 rounded-xl border border-slate-200 pr-9 pl-3 text-sm focus:border-emerald-500 outline-none" placeholder="مثلاً: محمصة الرياض">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">الإيحاءات / الملاحظات</label>
+                        <textarea id="note-text" class="w-full h-32 rounded-xl border border-slate-200 p-3 text-sm focus:border-emerald-500 outline-none resize-none leading-relaxed" placeholder="أدخل الإيحاءات هنا..."></textarea>
+                    </div>
+
+                    <button onclick="saveNote()" class="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-600/20 transition btn-pulse">
+                        حفظ التعديلات
+                    </button>
+                </div>
+            </div>
+
+             <div id="note-empty" class="flex-1 flex flex-col items-center justify-center text-slate-300">
+                <i class="fa-solid fa-pen-nib text-4xl mb-3"></i>
+                <p class="text-sm">اختر صنفاً لتعديل بياناته</p>
+            </div>
+        </aside>
+
+        <!-- Notes Table -->
+        <main class="flex-1 overflow-hidden p-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 h-full flex flex-col">
+                 <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center no-print">
+                     <h3 class="font-bold text-slate-700">دليل القهوة</h3>
+                     <button onclick="window.print()" class="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700"><i class="fa-solid fa-print"></i> طباعة</button>
+                 </div>
+                 <div class="overflow-auto flex-1">
+                     <table class="w-full text-right text-xs sm:text-sm">
+                         <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10">
+                             <tr>
+                                 <th class="p-3 w-24">الكود</th>
+                                 <th class="p-3 w-48">الصنف</th>
+                                 <th class="p-3 w-40">المحمصة</th>
+                                 <th class="p-3">الإيحاءات / الملاحظات</th>
+                             </tr>
+                         </thead>
+                         <tbody id="note-table-body" class="divide-y divide-slate-100"></tbody>
+                     </table>
+                 </div>
+            </div>
+        </main>
+    </div>
+
+</div>
+
+<!-- FEEDBACK TOAST -->
+<div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl font-bold text-sm opacity-0 pointer-events-none transition-all duration-300 z-[100]">
+    تمت العملية بنجاح
+</div>
+
+<!-- Modal for New Item -->
+<div id="addItemModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden items-center justify-center fade-in">
+    <div class="bg-white p-6 rounded-2xl w-96 max-w-[90%] shadow-2xl">
+        <h3 class="text-lg font-bold mb-4">إضافة صنف جديد للنظام</h3>
+        <input id="new-code" readonly class="w-full mb-2 bg-slate-100 p-2 rounded text-xs font-mono text-slate-500">
+        <input id="new-name" placeholder="اسم الصنف" class="w-full mb-2 border p-2 rounded">
+        <input id="new-sys-qty" type="number" placeholder="الكمية الافتراضية" class="w-full mb-4 border p-2 rounded">
+        <div class="flex gap-2">
+            <button onclick="confirmAddItem()" class="flex-1 bg-brand-600 text-white py-2 rounded-lg font-bold">حفظ</button>
+            <button onclick="document.getElementById('addItemModal').classList.add('hidden')" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg font-bold">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ================= SERVICE WORKER REGISTRATION =================
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker Registered!', reg))
+                .catch(err => console.log('Service Worker Failed!', err));
+        });
+    }
+
+    // ================= STATE MANAGEMENT =================
+    const STORAGE_KEY_INV = 'inv_pro_data_v2';
+    const STORAGE_KEY_ORDERS = 'inv_pro_orders_data_v1';
+    
+    let inventory = [];
+    // Orders Structure: { showroom: [], cafe: [] }
+    let ordersData = { showroom: [], cafe: [] };
+
+    let currentView = 'home';
+    let selectedItemIdx = -1;
+    let invMode = 'add'; 
+    
+    // Order View State
+    let activeOrderSource = 'showroom'; // 'showroom' or 'cafe' (for input)
+    let activeOrdersTab = 'showroom';   // 'showroom' or 'cafe' (for viewing table)
+
+    // ================= INIT & NAVIGATION =================
+    function init() {
+        // Load Inventory
+        const data = localStorage.getItem(STORAGE_KEY_INV);
+        if (data) {
+            inventory = JSON.parse(data);
+        }
+        inventory.forEach(item => {
+            if (!item.batches) item.batches = [];
+            if (!item.roastery) item.roastery = "";
+            if (!item.notes) item.notes = "";
+        });
+
+        // Load Orders
+        const ordData = localStorage.getItem(STORAGE_KEY_ORDERS);
+        if (ordData) {
+            ordersData = JSON.parse(ordData);
+        }
+        // Ensure structure
+        if(!ordersData.showroom) ordersData.showroom = [];
+        if(!ordersData.cafe) ordersData.cafe = [];
+        
+        // Ensure status field in orders
+        ['showroom', 'cafe'].forEach(key => {
+            ordersData[key].forEach(o => {
+                if(!o.status) o.status = 'pending'; // Default status for existing data
+            });
+        });
+
+        updateDashboardStats(); // Initial Dashboard Calculation
+        switchView('home');
+
+        // Setup Enter Key Listeners
+        document.getElementById('inv-input-qty').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') submitInventory();
+        });
+        
+        // Setup Date Default for Orders
+        document.getElementById('ord-date').valueAsDate = new Date();
+    }
+
+    function updateDashboardStats() {
+        // 1. Inventory Count
+        document.getElementById('dash-inv-count').innerText = inventory.length;
+
+        // 2. Expiry Alerts (Less than 30 days)
+        let expAlerts = 0;
+        inventory.forEach(item => {
+            item.batches.forEach(b => {
+                 const { remainingDays } = calcExpiry(b.date, b.duration);
+                 if(remainingDays <= 30) expAlerts++;
+            });
+        });
+        document.getElementById('dash-exp-count').innerText = expAlerts;
+
+        // 3. Notes Count
+        const notesCount = inventory.filter(i => i.notes && i.notes.length > 2).length;
+        document.getElementById('dash-notes-count').innerText = notesCount;
+
+        // 4. Pending Orders Count
+        const pendingShowroom = ordersData.showroom.filter(o => o.status !== 'completed').length;
+        const pendingCafe = ordersData.cafe.filter(o => o.status !== 'completed').length;
+        document.getElementById('dash-orders-count').innerText = pendingShowroom + pendingCafe;
+    }
+
+    function switchView(viewName) {
+        currentView = viewName;
+        // Hide all views
+        ['view-home', 'view-inventory', 'view-expiry', 'view-notes', 'view-orders'].forEach(id => {
+            document.getElementById(id).classList.add('hidden');
+        });
+        
+        // Show target view
+        document.getElementById(`view-${viewName}`).classList.remove('hidden');
+        document.getElementById(`view-${viewName}`).classList.add('fade-in');
+
+        // Reset selections
+        selectedItemIdx = -1;
+        
+        // Refresh Data
+        if (viewName === 'inventory') {
+            resetInvUI();
+            renderInvTable();
+            setTimeout(() => document.getElementById('inv-search').focus(), 100);
+        } else if (viewName === 'expiry') {
+            resetExpUI();
+            renderExpTable();
+        } else if (viewName === 'notes') {
+            resetNoteUI();
+            renderNoteTable();
+        } else if (viewName === 'orders') {
+            switchOrdersTab(activeOrdersTab);
+            setOrderSource(activeOrderSource);
+        } else if (viewName === 'home') {
+            updateDashboardStats();
+        }
+    }
+
+    function goToHome() {
+        switchView('home');
+    }
+
+    function saveAllData() {
+        localStorage.setItem(STORAGE_KEY_INV, JSON.stringify(inventory));
+        localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(ordersData));
+        updateDashboardStats();
+    }
+
+    function saveAllDataManual() {
+        saveAllData();
+        showToast('تم حفظ جميع البيانات بنجاح', 'success');
+    }
+
+    // ================= ORDERS LOGIC (DEVELOPED) =================
+    
+    function setOrderSource(source) {
+        activeOrderSource = source;
+        const btnS = document.getElementById('btn-src-showroom');
+        const btnC = document.getElementById('btn-src-cafe');
+        
+        btnS.className = "flex-1 py-2 rounded-lg text-xs font-bold transition-all border";
+        btnC.className = "flex-1 py-2 rounded-lg text-xs font-bold transition-all border";
+
+        if(source === 'showroom') {
+            btnS.classList.add('bg-showroom-600', 'text-white', 'border-showroom-600', 'shadow-md');
+            btnC.classList.add('bg-white', 'text-slate-500', 'border-slate-200');
+        } else {
+            btnC.classList.add('bg-cafe-600', 'text-white', 'border-cafe-600', 'shadow-md');
+            btnS.classList.add('bg-white', 'text-slate-500', 'border-slate-200');
+        }
+    }
+
+    function switchOrdersTab(tab) {
+        activeOrdersTab = tab;
+        
+        const tShow = document.getElementById('tab-showroom');
+        const tCafe = document.getElementById('tab-cafe');
+
+        tShow.className = "flex-1 py-3 bg-white rounded-xl shadow-sm border-2 border-transparent text-slate-400 font-bold transition-all relative overflow-hidden group opacity-60";
+        tCafe.className = "flex-1 py-3 bg-white rounded-xl shadow-sm border-2 border-transparent text-slate-400 font-bold transition-all relative overflow-hidden group opacity-60";
+
+        if(tab === 'showroom') {
+            tShow.className = "flex-1 py-3 bg-white rounded-xl shadow-md border-2 border-showroom-600 text-showroom-600 font-bold transition-all relative overflow-hidden group";
+            document.getElementById('orders-list-title').innerHTML = '<i class="fa-solid fa-store text-showroom-600"></i> قائمة طلبات المعرض';
+        } else {
+            tCafe.className = "flex-1 py-3 bg-white rounded-xl shadow-md border-2 border-cafe-600 text-cafe-600 font-bold transition-all relative overflow-hidden group";
+            document.getElementById('orders-list-title').innerHTML = '<i class="fa-solid fa-mug-saucer text-cafe-600"></i> قائمة طلبات الكافيه';
+        }
+
+        renderOrdersTable();
+    }
+
+    function addNewOrder() {
+        const num = document.getElementById('ord-num').value;
+        const company = document.getElementById('ord-company').value;
+        const type = document.getElementById('ord-type').value;
+        const date = document.getElementById('ord-date').value;
+
+        if(!num || !company || !date) {
+            showToast('يرجى ملء جميع الحقول', 'error');
+            return;
+        }
+
+        const newOrder = {
+            id: Date.now(),
+            number: num,
+            company: company,
+            type: type,
+            date: date,
+            status: 'pending' // New Status Field
+        };
+
+        if(activeOrderSource === 'showroom') {
+            ordersData.showroom.unshift(newOrder);
+        } else {
+            ordersData.cafe.unshift(newOrder);
+        }
+
+        saveAllData();
+        
+        if(activeOrderSource === activeOrdersTab) {
+            renderOrdersTable();
+        } else {
+            showToast(`تمت الإضافة إلى ${activeOrderSource === 'showroom' ? 'المعرض' : 'الكافيه'}`, 'success');
+        }
+
+        document.getElementById('ord-num').value = '';
+        document.getElementById('ord-company').value = '';
+    }
+
+    // Toggle Order Status (Complete/Pending)
+    function toggleOrderStatus(id) {
+        const list = ordersData[activeOrdersTab];
+        const order = list.find(o => o.id === id);
+        if(order) {
+            order.status = order.status === 'completed' ? 'pending' : 'completed';
+            // Move completed to bottom, pending to top
+            ordersData[activeOrdersTab].sort((a, b) => {
+                if (a.status === b.status) return b.id - a.id; // Newest first
+                return a.status === 'completed' ? 1 : -1; // Pending first
+            });
+            saveAllData();
+            renderOrdersTable();
+            showToast(order.status === 'completed' ? 'تم إنجاز الطلب' : 'تم إعادة الطلب لقائمة الانتظار');
+        }
+    }
+
+    function renderOrdersTable() {
+        const tbody = document.getElementById('orders-table-body');
+        const emptyState = document.getElementById('orders-empty');
+        tbody.innerHTML = '';
+        
+        const list = ordersData[activeOrdersTab] || [];
+
+        if (list.length === 0) {
+            emptyState.classList.remove('hidden');
+            return;
+        } else {
+            emptyState.classList.add('hidden');
+        }
+
+        list.forEach(order => {
+            const isCompleted = order.status === 'completed';
+            const daysDiff = calculateDaysSince(order.date);
+            
+            let rowClass = isCompleted ? "bg-slate-50 opacity-60 border-b border-slate-100" : "hover:bg-slate-50 transition border-b border-slate-100";
+            let daysClass = "font-bold text-slate-600";
+            let warningIcon = "";
+
+            if (!isCompleted && daysDiff > 7) {
+                rowClass = "bg-red-50 hover:bg-red-100 transition border-b border-red-100";
+                daysClass = "font-black text-red-600";
+                warningIcon = `<i class="fa-solid fa-triangle-exclamation text-red-500 ml-1"></i>`;
+            } else if (isCompleted) {
+                 daysClass = "text-slate-400 line-through";
+            }
+
+            const tr = document.createElement('tr');
+            tr.className = rowClass;
+            tr.innerHTML = `
+                <td class="p-3 text-center">
+                    <button onclick="toggleOrderStatus(${order.id})" class="w-8 h-8 rounded-full flex items-center justify-center transition ${isCompleted ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-300 hover:bg-green-50 hover:text-green-500'}">
+                        <i class="fa-solid fa-check"></i>
+                    </button>
+                </td>
+                <td class="p-3 font-mono font-bold text-slate-700 ${isCompleted ? 'line-through decoration-slate-400' : ''}">${order.number}</td>
+                <td class="p-3 font-bold text-slate-800 ${isCompleted ? 'text-slate-500' : ''}">${order.company}</td>
+                <td class="p-3 text-xs">
+                    <span class="px-2 py-1 rounded bg-white border border-slate-200 text-slate-600">${order.type}</span>
+                </td>
+                <td class="p-3 text-center text-slate-500 text-xs font-mono">${formatDateDisplay(order.date)}</td>
+                <td class="p-3 text-center ${daysClass}">
+                   ${daysDiff} يوم ${warningIcon}
+                </td>
+                <td class="p-3 text-center no-print">
+                    <button onclick="deleteOrder(${order.id})" class="text-slate-400 hover:text-red-500 transition px-2">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function calculateDaysSince(dateString) {
+        const pastDate = new Date(dateString);
+        const today = new Date();
+        pastDate.setHours(0,0,0,0);
+        today.setHours(0,0,0,0);
+        const diffTime = Math.abs(today - pastDate);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+    }
+
+    function deleteOrder(id) {
+        if(confirm('هل أنت متأكد من حذف هذا الطلب نهائياً؟')) {
+            ordersData[activeOrdersTab] = ordersData[activeOrdersTab].filter(o => o.id !== id);
+            saveAllData();
+            renderOrdersTable();
+            showToast('تم حذف الطلب');
+        }
+    }
+
+
+    // ================= SHARED HELPERS =================
+    function showToast(msg, type='success') {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.className = `fixed bottom-5 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl font-bold text-sm transition-all duration-300 z-[100] ${type === 'error' ? 'bg-red-600 text-white' : 'bg-brand-900 text-white'}`;
+        t.style.opacity = '1';
+        t.style.bottom = '30px';
+        setTimeout(() => {
+            t.style.opacity = '0';
+            t.style.bottom = '5px';
+        }, 2000);
+    }
+
+    function formatDateDisplay(dateStr) {
+        if (!dateStr) return '-';
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return dateStr;
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function handleSearch(context, query) {
+        query = query.toLowerCase();
+        const resultsId = context === 'inventory' ? 'inv-results' : (context === 'expiry' ? 'exp-results' : 'note-results');
+        const list = document.getElementById(resultsId);
+        list.innerHTML = '';
+        
+        if (!query) {
+            list.classList.add('hidden');
+            if (context === 'inventory') renderInvTable();
+            if (context === 'expiry') renderExpTable();
+            if (context === 'notes') renderNoteTable();
+            return;
+        }
+
+        let matches = inventory.map((item, idx) => ({ ...item, idx })).filter(item => {
+            const basicMatch = item.name.toLowerCase().includes(query) || item.code.includes(query);
+            if (context === 'notes') {
+                return basicMatch || item.notes.toLowerCase().includes(query) || item.roastery.toLowerCase().includes(query);
+            }
+            return basicMatch;
+        });
+
+        const dropdownMatches = matches.slice(0, 5);
+
+        if (dropdownMatches.length > 0) {
+            list.classList.remove('hidden');
+            dropdownMatches.forEach(m => {
+                const li = document.createElement('li');
+                li.className = 'p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer flex justify-between items-center';
+                li.innerHTML = `<span class="font-bold text-slate-700 text-xs">${m.name}</span> <span class="text-[10px] font-mono bg-slate-100 px-1 rounded">${m.code}</span>`;
+                li.onclick = () => selectItem(m.idx, context);
+                list.appendChild(li);
+            });
+        } else {
+             if (context === 'inventory' && query.length > 1) {
+                const li = document.createElement('li');
+                li.className = 'p-3 bg-brand-50 hover:bg-brand-100 cursor-pointer text-brand-700 font-bold text-xs text-center';
+                li.innerHTML = `<i class="fa-solid fa-plus"></i> إضافة صنف جديد: ${query}`;
+                li.onclick = () => openAddItemModal(query);
+                list.appendChild(li);
+                list.classList.remove('hidden');
+             } else {
+                 list.classList.add('hidden');
+             }
+        }
+        
+        if (context === 'notes') renderNoteTable(query);
+        else if (context === 'expiry') renderExpTable(query);
+        else renderInvTable(query);
+    }
+
+    function selectItem(idx, context) {
+        selectedItemIdx = idx;
+        const item = inventory[idx];
+        
+        document.querySelectorAll('ul[id$="-results"]').forEach(ul => ul.classList.add('hidden'));
+        document.querySelectorAll('input[id$="-search"]').forEach(inp => inp.value = '');
+
+        if (context === 'inventory') {
+            document.getElementById('inv-empty').classList.add('hidden');
+            document.getElementById('inv-card').classList.remove('hidden');
+            document.getElementById('inv-name').innerText = item.name;
+            document.getElementById('inv-code').innerText = item.code;
+            document.getElementById('inv-sys-qty').innerText = item.sysQty;
+            document.getElementById('inv-current-qty').innerText = item.actualQty;
+            document.getElementById('inv-input-qty').value = '';
+            document.getElementById('inv-input-qty').focus();
+            renderInvTable(); 
+        } 
+        else if (context === 'expiry') {
+            document.getElementById('exp-empty').classList.add('hidden');
+            document.getElementById('exp-card').classList.remove('hidden');
+            document.getElementById('exp-name').innerText = item.name;
+            document.getElementById('exp-date').value = '';
+            document.getElementById('exp-qty').value = '';
+            document.getElementById('exp-duration').value = '12'; // Reset default
+            renderBatchesList(item);
+        }
+        else if (context === 'notes') {
+            document.getElementById('note-empty').classList.add('hidden');
+            document.getElementById('note-card').classList.remove('hidden');
+            document.getElementById('note-name').innerText = item.name;
+            document.getElementById('note-code').innerText = item.code;
+            document.getElementById('note-roastery').value = item.roastery || '';
+            document.getElementById('note-text').value = item.notes || '';
+        }
+    }
+
+    // ================= INVENTORY LOGIC =================
+    function resetInvUI() {
+        document.getElementById('inv-empty').classList.remove('hidden');
+        document.getElementById('inv-card').classList.add('hidden');
+    }
+
+    function setInvMode(m) {
+        invMode = m;
+        const btnAdd = document.getElementById('btn-inv-add');
+        const btnSub = document.getElementById('btn-inv-sub');
+        if (m === 'add') {
+            btnAdd.className = "flex-1 py-2 rounded-lg text-xs font-bold bg-brand-600 text-white shadow-md transition-colors";
+            btnSub.className = "flex-1 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-500 transition-colors";
+        } else {
+            btnAdd.className = "flex-1 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-500 transition-colors";
+            btnSub.className = "flex-1 py-2 rounded-lg text-xs font-bold bg-red-500 text-white shadow-md transition-colors";
+        }
+        document.getElementById('inv-input-qty').focus();
+    }
+
+    function submitInventory() {
+        if (selectedItemIdx === -1) return;
+        const inputField = document.getElementById('inv-input-qty');
+        const qtyVal = Number(inputField.value);
+        if (!qtyVal && qtyVal !== 0) return;
+
+        if (invMode === 'add') {
+            inventory[selectedItemIdx].actualQty += qtyVal;
+        } else {
+            inventory[selectedItemIdx].actualQty = Math.max(0, inventory[selectedItemIdx].actualQty - qtyVal);
+        }
+
+        document.getElementById('inv-current-qty').innerText = inventory[selectedItemIdx].actualQty;
+        inputField.value = '';
+        inputField.focus();
+        
+        saveAllData();
+        renderInvTable();
+        showToast('تم تحديث الكمية');
+    }
+
+    function renderInvTable(filter = '') {
+        const tbody = document.getElementById('inv-table-body');
+        tbody.innerHTML = '';
+        
+        inventory.forEach((item, idx) => {
+            if (filter && !item.name.toLowerCase().includes(filter) && !item.code.includes(filter)) return;
+
+            const diff = item.actualQty - item.sysQty;
+            let diffColor = diff === 0 ? 'text-emerald-500' : (diff > 0 ? 'text-blue-500' : 'text-red-500');
+            let diffSign = diff > 0 ? '+' : '';
+
+            const tr = document.createElement('tr');
+            tr.className = `hover:bg-blue-50 cursor-pointer transition ${idx === selectedItemIdx ? 'bg-blue-100' : ''}`;
+            tr.onclick = () => selectItem(idx, 'inventory');
+            tr.innerHTML = `
+                <td class="p-3 font-mono text-slate-500">${item.code}</td>
+                <td class="p-3 font-bold text-slate-700">${item.name}</td>
+                <td class="p-3 text-center text-slate-400 font-mono">${item.sysQty}</td>
+                <td class="p-3 text-center text-brand-900 font-black bg-white/50 rounded">${item.actualQty}</td>
+                <td class="p-3 text-center font-bold ${diffColor} dir-ltr">${diffSign}${diff}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openAddItemModal(code) {
+        document.getElementById('addItemModal').classList.remove('hidden');
+        document.getElementById('addItemModal').classList.add('flex');
+        document.getElementById('new-code').value = code;
+        document.getElementById('new-name').value = '';
+        document.getElementById('new-sys-qty').value = '';
+        document.getElementById('new-name').focus();
+    }
+
+    function confirmAddItem() {
+        const code = document.getElementById('new-code').value;
+        const name = document.getElementById('new-name').value;
+        const sys = Number(document.getElementById('new-sys-qty').value) || 0;
+        
+        if (name) {
+            inventory.push({ code, name, sysQty: sys, actualQty: 0, batches: [], roastery: '', notes: '' });
+            document.getElementById('addItemModal').classList.add('hidden');
+            saveAllData();
+            selectItem(inventory.length - 1, 'inventory');
+            showToast('تم إضافة الصنف بنجاح');
+        }
+    }
+
+    // ================= EXPIRY / BATCHES LOGIC =================
+    function resetExpUI() {
+        document.getElementById('exp-empty').classList.remove('hidden');
+        document.getElementById('exp-card').classList.add('hidden');
+    }
+
+    function addBatch() {
+        if (selectedItemIdx === -1) return;
+        const dateStr = document.getElementById('exp-date').value;
+        const qty = Number(document.getElementById('exp-qty').value);
+        const duration = Number(document.getElementById('exp-duration').value) || 12; // Default 12 Months
+
+        if (!dateStr || !qty) {
+            showToast('يرجى إدخال التاريخ والكمية', 'error');
+            return;
+        }
+
+        const newBatch = { id: Date.now(), date: dateStr, qty: qty, duration: duration };
+        inventory[selectedItemIdx].batches.push(newBatch);
+        inventory[selectedItemIdx].batches.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        saveAllData();
+        renderBatchesList(inventory[selectedItemIdx]);
+        renderExpTable();
+        
+        document.getElementById('exp-qty').value = '';
+        showToast('تم إضافة الدفعة');
+    }
+
+    function deleteBatch(batchId) {
+         if (selectedItemIdx === -1) return;
+         inventory[selectedItemIdx].batches = inventory[selectedItemIdx].batches.filter(b => b.id !== batchId);
+         saveAllData();
+         renderBatchesList(inventory[selectedItemIdx]);
+         renderExpTable();
+    }
+
+    function renderBatchesList(item) {
+        const list = document.getElementById('exp-batches-list');
+        list.innerHTML = '';
+        
+        if (item.batches.length === 0) {
+            list.innerHTML = '<div class="text-xs text-slate-400 text-center py-2">لا توجد دفعات مسجلة</div>';
+            return;
+        }
+
+        item.batches.forEach(batch => {
+            const { remainingDays, label, colorClass, expiryDateStr } = calcExpiry(batch.date, batch.duration);
+            const div = document.createElement('div');
+            div.className = 'bg-white border border-slate-100 p-2 rounded-lg flex justify-between items-center shadow-sm';
+            div.innerHTML = `
+                <div>
+                    <div class="text-[10px] text-slate-400">تحميص: ${formatDateDisplay(batch.date)}</div>
+                    <div class="text-[10px] text-red-400">انتهاء: ${expiryDateStr}</div>
+                    <div class="text-xs font-bold text-slate-700">الكمية: ${batch.qty}</div>
+                </div>
+                <div class="text-right">
+                    <span class="block text-[10px] px-2 py-0.5 rounded ${colorClass} mb-1">${label}</span>
+                    <button onclick="deleteBatch(${batch.id})" class="text-[10px] text-red-400 hover:text-red-600 underline">حذف</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    function calcExpiry(roastDateStr, durationMonths = 12) {
+        const prodDate = new Date(roastDateStr);
+        const expDate = new Date(prodDate);
+        expDate.setMonth(expDate.getMonth() + durationMonths); // Flexible Duration
+        
+        const today = new Date();
+        const diffTime = expDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        let label = '';
+        let colorClass = '';
+
+        if (diffDays < 0) {
+            label = `منتهي (${Math.abs(diffDays)} يوم)`;
+            colorClass = 'bg-red-100 text-red-700';
+        } else if (diffDays <= 30) {
+            label = `باقي ${diffDays} يوم`;
+            colorClass = 'bg-amber-100 text-amber-700';
+        } else {
+            const months = Math.floor(diffDays / 30);
+            label = `باقي ${months} شهر`;
+            colorClass = 'bg-emerald-100 text-emerald-700';
+        }
+        
+        const d = expDate.getDate().toString().padStart(2, '0');
+        const m = (expDate.getMonth() + 1).toString().padStart(2, '0');
+        const y = expDate.getFullYear();
+        const expiryDateStr = `${d}/${m}/${y}`;
+
+        return { remainingDays: diffDays, label, colorClass, expiryDateStr, expDateObj: expDate };
+    }
+
+    function renderExpTable(filter = '') {
+        const tbody = document.getElementById('exp-table-body');
+        tbody.innerHTML = '';
+
+        inventory.forEach((item, idx) => {
+            if (filter && !item.name.toLowerCase().includes(filter)) return;
+            
+            if (item.batches.length === 0) {
+                 const tr = document.createElement('tr');
+                 tr.className = `hover:bg-amber-50 cursor-pointer transition ${idx === selectedItemIdx ? 'bg-amber-100' : ''}`;
+                 tr.onclick = () => selectItem(idx, 'expiry');
+                 tr.innerHTML = `
+                    <td class="p-3 font-mono text-slate-500 text-xs">${item.code}</td>
+                    <td class="p-3 font-bold text-slate-700">${item.name}</td>
+                    <td class="p-3 text-center text-slate-300">-</td>
+                    <td class="p-3 text-center text-slate-300">-</td>
+                    <td class="p-3 text-center text-slate-300">0</td>
+                    <td class="p-3 text-center text-slate-300 text-[10px]">لا توجد تواريخ</td>
+                `;
+                tbody.appendChild(tr);
+                return;
+            }
+
+            item.batches.forEach((batch, batchIdx) => {
+                const { label, colorClass, expiryDateStr } = calcExpiry(batch.date, batch.duration);
+                const tr = document.createElement('tr');
+                tr.className = `hover:bg-amber-50 cursor-pointer transition border-b border-slate-50 ${idx === selectedItemIdx ? 'bg-amber-100' : ''}`;
+                tr.onclick = () => selectItem(idx, 'expiry');
+
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-slate-500 text-xs">${item.code}</td>
+                    <td class="p-3 font-bold text-slate-700">${item.name}</td>
+                    <td class="p-3 text-center font-mono text-slate-600">${formatDateDisplay(batch.date)}</td>
+                    <td class="p-3 text-center font-mono text-red-600 font-bold">${expiryDateStr}</td>
+                    <td class="p-3 text-center font-bold text-slate-800">${batch.qty}</td>
+                    <td class="p-3 text-center"><span class="px-2 py-1 rounded text-[10px] ${colorClass}">${label}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        });
+    }
+
+    // ================= NOTES LOGIC =================
+    function resetNoteUI() {
+        document.getElementById('note-empty').classList.remove('hidden');
+        document.getElementById('note-card').classList.add('hidden');
+    }
+
+    function saveNote() {
+        if (selectedItemIdx === -1) return;
+        inventory[selectedItemIdx].roastery = document.getElementById('note-roastery').value;
+        inventory[selectedItemIdx].notes = document.getElementById('note-text').value;
+        saveAllData();
+        renderNoteTable();
+        showToast('تم حفظ الملاحظات');
+    }
+
+    function renderNoteTable(filter = '') {
+        const tbody = document.getElementById('note-table-body');
+        tbody.innerHTML = '';
+
+        inventory.forEach((item, idx) => {
+            const searchStr = (item.name + item.roastery + item.notes).toLowerCase();
+            if (filter && !searchStr.includes(filter)) return;
+
+            const tr = document.createElement('tr');
+            tr.className = `hover:bg-emerald-50 cursor-pointer transition ${idx === selectedItemIdx ? 'bg-emerald-100' : ''}`;
+            tr.onclick = () => selectItem(idx, 'notes');
+            
+            const roasteryDisplay = item.roastery ? `<span class="text-emerald-700 font-bold"><i class="fa-solid fa-fire-burner text-xs"></i> ${item.roastery}</span>` : '<span class="text-slate-300">-</span>';
+            const notesDisplay = item.notes ? `<span class="text-slate-600 text-xs">${item.notes}</span>` : '<span class="text-slate-300 text-[10px]">لا توجد ملاحظات</span>';
+
+            tr.innerHTML = `
+                <td class="p-3 font-mono text-slate-400 text-xs">${item.code}</td>
+                <td class="p-3 font-bold text-slate-700">${item.name}</td>
+                <td class="p-3">${roasteryDisplay}</td>
+                <td class="p-3">${notesDisplay}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ================= DATA IMPORT/EXPORT FUNCTIONS =================
+    
+    function updateOrAddItem(code, name, sysQty, roastery = null, notes = null) {
+        let item = inventory.find(x => x.code === String(code));
+        if (!item) {
+            item = { 
+                code: String(code), 
+                name: name || 'صنف جديد', 
+                sysQty: Number(sysQty) || 0, 
+                actualQty: 0, 
+                batches: [], 
+                roastery: roastery || '', 
+                notes: notes || '' 
+            };
+            inventory.push(item);
+        } else {
+            if (name) item.name = name;
+            if (sysQty !== undefined && sysQty !== null) item.sysQty = Number(sysQty);
+            if (roastery !== null) item.roastery = roastery;
+            if (notes !== null) item.notes = notes;
+        }
+    }
+
+    // 1. GLOBAL (HOME)
+    function handleGlobalImport(evt) {
+        processExcel(evt, (row) => {
+            const code = row[0];
+            if (code) {
+                updateOrAddItem(code, row[1], row[2], row[3], row[4]);
+            }
+        }, 'تم تحديث البيانات في جميع الصفحات');
+    }
+
+    function exportGlobalData() {
+        const data = [];
+        inventory.forEach(item => {
+            if (item.batches.length > 0) {
+                item.batches.forEach(b => {
+                    const { expiryDateStr } = calcExpiry(b.date, b.duration);
+                    data.push({
+                        'الكود': item.code,
+                        'الصنف': item.name,
+                        'المحمصة': item.roastery,
+                        'الملاحظات': item.notes,
+                        'الكمية بالنظام': item.sysQty,
+                        'الكمية الفعلية': item.actualQty,
+                        'الفارق': item.actualQty - item.sysQty,
+                        'تاريخ التحميص': formatDateDisplay(b.date),
+                        'تاريخ الانتهاء': expiryDateStr,
+                        'كمية الدفعة': b.qty
+                    });
+                });
+            } else {
+                data.push({
+                    'الكود': item.code,
+                    'الصنف': item.name,
+                    'المحمصة': item.roastery,
+                    'الملاحظات': item.notes,
+                    'الكمية بالنظام': item.sysQty,
+                    'الكمية الفعلية': item.actualQty,
+                    'الفارق': item.actualQty - item.sysQty,
+                    'تاريخ التحميص': '-',
+                    'تاريخ الانتهاء': '-',
+                    'كمية الدفعة': '-'
+                });
+            }
+        });
+        downloadExcel(data, "التقرير_الشامل_المفصل");
+    }
+
+    // 2. INVENTORY PAGE
+    function handleInventoryImport(evt) {
+        processExcel(evt, (row) => {
+            const code = row[0];
+            if (code) {
+                let item = inventory.find(x => x.code === String(code));
+                if (item) {
+                    item.sysQty = Number(row[2]) || item.sysQty; 
+                } else {
+                    updateOrAddItem(code, row[1], row[2]);
+                }
+            }
+        }, 'تم استيراد بيانات الجرد');
+    }
+
+    function exportInventoryData() {
+        const data = inventory.map(item => ({
+            'الكود': item.code,
+            'اسم الصنف': item.name,
+            'الكمية بالنظام': item.sysQty,
+            'الكمية الفعلية': item.actualQty,
+            'الفارق (زيادة/نقص)': item.actualQty - item.sysQty
+        }));
+        downloadExcel(data, "تقرير_الجرد");
+    }
+
+    // 3. EXPIRY PAGE
+    function handleExpiryImport(evt) {
+        processExcel(evt, (row) => {
+            const code = row[0];
+            if (code) updateOrAddItem(code, row[1], null); 
+        }, 'تم استيراد أصناف الصلاحية');
+    }
+
+    function exportExpiryData() {
+        const data = [];
+        inventory.forEach(item => {
+            if (item.batches.length === 0) {
+                 data.push({
+                    'الكود': item.code,
+                    'اسم الصنف': item.name,
+                    'تاريخ التحميص': '-',
+                    'تاريخ الانتهاء': '-',
+                    'الكمية': 0,
+                    'الحالة': 'لا توجد تواريخ'
+                });
+            } else {
+                item.batches.forEach(b => {
+                    const { label, expiryDateStr } = calcExpiry(b.date, b.duration);
+                    data.push({
+                        'الكود': item.code,
+                        'اسم الصنف': item.name,
+                        'تاريخ التحميص': formatDateDisplay(b.date),
+                        'تاريخ الانتهاء': expiryDateStr,
+                        'الكمية': b.qty,
+                        'الحالة': label
+                    });
+                });
+            }
+        });
+        downloadExcel(data, "تقرير_تواريخ_الانتهاء_المفصل");
+    }
+
+    // 4. NOTES PAGE
+    function handleNotesImport(evt) {
+        processExcel(evt, (row) => {
+            const code = row[0];
+            if (code) {
+                 let item = inventory.find(x => x.code === String(code));
+                 if(item) {
+                     if(row[2]) item.roastery = row[2];
+                     if(row[3]) item.notes = row[3];
+                 } else {
+                     updateOrAddItem(code, row[1], 0, row[2], row[3]);
+                 }
+            }
+        }, 'تم استيراد الإيحاءات والمحامص');
+    }
+
+    function exportNotesData() {
+        const data = inventory.map(item => ({
+            'اسم المحمصة': item.roastery,
+            'الكود': item.code,
+            'اسم الصنف': item.name,
+            'الإيحاء / الملاحظات': item.notes
+        }));
+        downloadExcel(data, "تقرير_الإيحاءات");
+    }
+
+    // --- Excel Helpers ---
+    function processExcel(evt, rowCallback, successMsg) {
+        const file = evt.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+                
+                for(let i=1; i<rows.length; i++) {
+                    rowCallback(rows[i]);
+                }
+                saveAllData();
+                
+                // Refresh Current View
+                if (currentView === 'inventory') renderInvTable();
+                else if (currentView === 'expiry') renderExpTable();
+                else if (currentView === 'notes') renderNoteTable();
+                else if (currentView === 'home') updateDashboardStats();
+
+                showToast(successMsg);
+                evt.target.value = '';
+            } catch(err) {
+                console.error(err);
+                showToast('خطأ في قراءة الملف', 'error');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function downloadExcel(jsonData, fileName) {
+        const ws = XLSX.utils.json_to_sheet(jsonData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
+    }
+
+    // Start
+    window.addEventListener('load', init);
+
+</script>
+</body>
+</html>
