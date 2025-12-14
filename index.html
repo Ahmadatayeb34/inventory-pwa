@@ -2,20 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام الإدارة المتكامل الاحترافي تطوير أحمد الطيب</title>
-
-    <!-- PWA Settings -->
-    <meta name="theme-color" content="#1e1b4b">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="نظام الإدارة تطوير أحمد الطيب">
-    
-    <!-- Link to Manifest -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- iOS Icon (Placeholder) -->
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/924/924514.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الإدارة المتكامل الاحترافي</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -34,7 +22,7 @@
                     fontFamily: { sans: ['Cairo', 'sans-serif'] },
                     colors: {
                         brand: {
-                            900: '#1e1b4b', // Deep Indigo
+                            900: '#1e1b4b',
                             800: '#312e81',
                             600: '#4f46e5',
                             500: '#6366f1',
@@ -42,15 +30,15 @@
                             50:  '#eef2ff'
                         },
                         accent: {
-                            500: '#f59e0b', // Amber for highlights
+                            500: '#f59e0b',
                             600: '#d97706'
                         },
                         cafe: {
-                            600: '#8c6b5d', // Coffee color
+                            600: '#8c6b5d',
                             50: '#fdf8f6'
                         },
                         showroom: {
-                            600: '#0f766e', // Teal color
+                            600: '#0f766e',
                             50: '#f0fdfa'
                         },
                         success: {
@@ -73,33 +61,30 @@
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Hide Number Arrows */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Button Pulse */
         .btn-pulse:active { transform: scale(0.95); }
 
-        /* Print Styles */
         @media print {
             body { background: white; overflow: visible; height: auto; }
             header, aside, .no-print { display: none !important; }
             #mainContainer { overflow: visible; position: static; }
-            #view-orders, #view-inventory, #view-expiry, #view-notes { position: static; display: block !important; }
+            .print-section { display: block !important; page-break-after: always; }
             table { width: 100%; border-collapse: collapse; font-size: 10pt; }
             th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
             thead { background: #eee !important; -webkit-print-color-adjust: exact; }
             .bg-red-50 { background-color: #ffebee !important; -webkit-print-color-adjust: exact; }
             .bg-green-50 { background-color: #e8f5e9 !important; -webkit-print-color-adjust: exact; }
+            .print-footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 9pt; padding: 10px; border-top: 1px solid #ddd; }
         }
     </style>
 </head>
@@ -113,8 +98,8 @@
                 <i class="fa-solid fa-layer-group text-xl"></i>
             </div>
             <div>
-                <h1 class="text-lg font-black leading-none">نظام الإدارة المتكامل تطوير أحمد الطيب</h1>
-                <span class="text-[10px] text-slate-400 font-bold tracking-wide">نسخة تجريبية قابلة للتطوير V2.0</span>
+                <h1 class="text-lg font-black leading-none">نظام الإدارة المتكامل</h1>
+                <span class="text-[10px] text-slate-400 font-bold tracking-wide">نسخة المطور المحترفة V2.0</span>
             </div>
         </div>
 
@@ -140,7 +125,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl">
-            <!-- Card 1: Inventory Stats -->
             <div onclick="switchView('inventory')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-brand-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden">
                 <div class="flex justify-between items-start mb-4">
                     <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
@@ -152,7 +136,6 @@
                 <p class="text-xs text-slate-400 mt-1">إجمالي الأصناف المسجلة</p>
             </div>
 
-            <!-- Card 2: Expiry Alerts -->
             <div onclick="switchView('expiry')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-accent-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
                  <div class="flex justify-between items-start mb-4">
                     <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
@@ -164,7 +147,6 @@
                 <p class="text-xs text-slate-400 mt-1">دفعات تنتهي خلال 30 يوم</p>
             </div>
 
-            <!-- Card 3: Notes -->
             <div onclick="switchView('notes')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-emerald-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
                  <div class="flex justify-between items-start mb-4">
                     <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
@@ -176,7 +158,6 @@
                 <p class="text-xs text-slate-400 mt-1">الوصفات والإيحاءات</p>
             </div>
 
-            <!-- Card 4: Orders Stats -->
             <div onclick="switchView('orders')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-purple-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
                  <div class="flex justify-between items-start mb-4">
                     <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
@@ -189,7 +170,6 @@
             </div>
         </div>
         
-        <!-- Global Actions -->
         <div class="mt-12 w-full max-w-5xl flex flex-col items-center">
             <div class="flex gap-4 mb-4">
                  <button onclick="document.getElementById('fileInputGlobal').click()" class="px-6 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition flex items-center gap-2 shadow-lg shadow-brand-500/30 btn-pulse">
@@ -205,18 +185,16 @@
         </div>
     </div>
 
-    <!-- VIEW: ORDERS (DEVELOPED) -->
+    <!-- VIEW: ORDERS -->
     <div id="view-orders" class="absolute inset-0 flex hidden bg-slate-100">
-        <!-- Sidebar Form -->
         <aside class="w-full lg:w-[380px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl overflow-y-auto no-print">
             <div class="p-5 bg-purple-50 border-b border-purple-100">
                 <h3 class="text-lg font-black text-purple-900 flex items-center gap-2">
-                    <i class="fa-solid fa-cart-plus"></i> إضافة طلب جديد
+                    <i class="fa-solid fa-cart-plus"></i> <span id="order-form-title">إضافة طلب جديد</span>
                 </h3>
             </div>
 
             <div class="p-5 flex flex-col gap-4">
-                <!-- Source Toggle -->
                 <div class="bg-slate-100 p-1 rounded-xl flex">
                     <button onclick="setOrderSource('showroom')" id="btn-src-showroom" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all shadow-sm bg-white text-showroom-600">
                         <i class="fa-solid fa-store"></i> المعرض
@@ -226,7 +204,6 @@
                     </button>
                 </div>
 
-                <!-- Form Fields -->
                 <div>
                     <label class="text-[11px] font-bold text-slate-500 mb-1 block">رقم الطلب</label>
                     <input id="ord-num" type="text" placeholder="مثلاً: PO-2024-001" class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none">
@@ -243,6 +220,7 @@
                         <option value="أمر شراء">أمر شراء</option>
                         <option value="طلب مواد">طلب مواد</option>
                         <option value="طلب تحويل بين الفروع">طلب تحويل بين الفروع</option>
+                        <option value="مستودع بضاعة في الطريق">مستودع بضاعة في الطريق</option>
                     </select>
                 </div>
 
@@ -251,15 +229,19 @@
                     <input id="ord-date" type="date" class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none">
                 </div>
 
-                <button onclick="addNewOrder()" class="w-full h-12 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-lg shadow-purple-600/20 transition btn-pulse mt-2">
-                    <i class="fa-solid fa-plus"></i> تسجيل الطلب
+                <input type="hidden" id="ord-edit-id" value="">
+                
+                <button onclick="saveOrder()" class="w-full h-12 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-lg shadow-purple-600/20 transition btn-pulse mt-2">
+                    <i class="fa-solid fa-save"></i> <span id="order-save-btn-text">تسجيل الطلب</span>
+                </button>
+                
+                <button onclick="cancelOrderEdit()" id="cancel-edit-btn" class="hidden w-full h-10 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition">
+                    <i class="fa-solid fa-times"></i> إلغاء التعديل
                 </button>
             </div>
         </aside>
 
-        <!-- Main Content: Orders Lists -->
         <main class="flex-1 overflow-hidden flex flex-col p-4 bg-slate-100">
-            <!-- Top Tabs -->
             <div class="flex gap-4 mb-4 no-print">
                 <button onclick="switchOrdersTab('showroom')" id="tab-showroom" class="flex-1 py-3 bg-white rounded-xl shadow-sm border-2 border-transparent text-showroom-600 font-bold transition-all relative overflow-hidden group">
                     <span class="relative z-10 flex items-center justify-center gap-2"><i class="fa-solid fa-store"></i> طلبات المعرض</span>
@@ -294,7 +276,6 @@
                         </thead>
                         <tbody id="orders-table-body" class="divide-y divide-slate-100"></tbody>
                     </table>
-                    <!-- Empty State -->
                     <div id="orders-empty" class="hidden flex flex-col items-center justify-center text-slate-300 py-10">
                         <i class="fa-solid fa-folder-open text-4xl mb-3"></i>
                         <p class="text-sm">لا توجد طلبات مسجلة في هذا القسم</p>
@@ -304,15 +285,13 @@
         </main>
     </div>
 
-    <!-- VIEW: INVENTORY (الجرد) -->
+    <!-- VIEW: INVENTORY -->
     <div id="view-inventory" class="absolute inset-0 flex hidden bg-slate-100">
-        <!-- Sidebar -->
         <aside class="w-full lg:w-[400px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl no-print">
-            <!-- Search -->
             <div class="p-5 bg-slate-50 border-b border-slate-200">
                 <h3 class="text-sm font-black text-brand-900 mb-2">إدارة الجرد</h3>
                 <div class="relative">
-                    <input id="inv-search" type="text" placeholder="باركود أو اسم..." class="w-full h-12 rounded-xl border-2 border-slate-200 px-10 text-sm font-bold focus:border-brand-500 outline-none transition" onkeyup="handleSearch('inventory', this.value)">
+                    <input id="inv-search" type="text" placeholder="باركود أو اسم..." class="w-full h-12 rounded-xl border-2 border-slate-200 px-10 text-sm font-bold focus:border-brand-500 outline-none transition" oninput="handleInventorySearch(this.value)">
                     <i class="fa-solid fa-barcode absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 </div>
                 <ul id="inv-results" class="hidden mt-2 bg-white rounded-xl shadow-lg border border-slate-100 max-h-40 overflow-y-auto z-50 absolute w-[90%] left-5"></ul>
@@ -328,7 +307,6 @@
                 </div>
             </div>
 
-            <!-- Active Item Card -->
             <div id="inv-card" class="hidden flex-1 p-5 flex flex-col gap-4 overflow-y-auto">
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
                     <h2 id="inv-name" class="text-lg font-black text-brand-900 mb-1">اسم الصنف</h2>
@@ -362,7 +340,6 @@
             </div>
         </aside>
 
-        <!-- Main Table Area -->
         <main class="flex-1 overflow-hidden flex flex-col p-4">
              <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-1 overflow-hidden flex flex-col">
                 <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center no-print">
@@ -387,9 +364,8 @@
         </main>
     </div>
 
-    <!-- VIEW: EXPIRY (تواريخ متعددة/Batches) -->
+    <!-- VIEW: EXPIRY -->
     <div id="view-expiry" class="absolute inset-0 flex hidden bg-slate-100">
-        <!-- Sidebar -->
         <aside class="w-full lg:w-[420px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl no-print">
              <div class="p-5 bg-amber-50 border-b border-amber-100">
                 <h3 class="text-sm font-black text-amber-900 mb-2">إدارة التواريخ</h3>
@@ -416,7 +392,6 @@
                     <p class="text-xs text-slate-400 mt-1">إضافة تاريخ تحميص جديد</p>
                 </div>
 
-                <!-- Add Batch Form (DEVELOPED) -->
                 <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100 space-y-3">
                     <div>
                         <label class="text-[11px] font-bold text-amber-800 mb-1 block">تاريخ التحميص (اليوم-الشهر-السنة)</label>
@@ -435,7 +410,6 @@
                     </button>
                 </div>
 
-                <!-- Existing Batches List (Mini) -->
                 <div class="flex-1">
                     <h4 class="text-xs font-bold text-slate-500 mb-2">التواريخ المسجلة:</h4>
                     <div id="exp-batches-list" class="space-y-2"></div>
@@ -447,7 +421,6 @@
             </div>
         </aside>
 
-        <!-- Expiry Overview Table -->
         <main class="flex-1 overflow-hidden p-4">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 h-full flex flex-col">
                  <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center no-print">
@@ -473,9 +446,8 @@
         </main>
     </div>
 
-    <!-- VIEW: NOTES (الإيحاءات) -->
+    <!-- VIEW: NOTES -->
     <div id="view-notes" class="absolute inset-0 flex hidden bg-slate-100">
-        <!-- Sidebar -->
         <aside class="w-full lg:w-[400px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl no-print">
              <div class="p-5 bg-emerald-50 border-b border-emerald-100">
                 <h3 class="text-sm font-black text-emerald-900 mb-2">سجل الإيحاءات</h3>
@@ -528,7 +500,6 @@
             </div>
         </aside>
 
-        <!-- Notes Table -->
         <main class="flex-1 overflow-hidden p-4">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 h-full flex flex-col">
                  <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center no-print">
@@ -554,12 +525,15 @@
 
 </div>
 
-<!-- FEEDBACK TOAST -->
+<!-- Print Footer -->
+<div class="print-footer hidden">
+    <p>تطوير: أحمد الطيب - 0550360705</p>
+</div>
+
 <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl font-bold text-sm opacity-0 pointer-events-none transition-all duration-300 z-[100]">
     تمت العملية بنجاح
 </div>
 
-<!-- Modal for New Item -->
 <div id="addItemModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden items-center justify-center fade-in">
     <div class="bg-white p-6 rounded-2xl w-96 max-w-[90%] shadow-2xl">
         <h3 class="text-lg font-bold mb-4">إضافة صنف جديد للنظام</h3>
@@ -574,34 +548,19 @@
 </div>
 
 <script>
-    // ================= SERVICE WORKER REGISTRATION =================
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker Registered!', reg))
-                .catch(err => console.log('Service Worker Failed!', err));
-        });
-    }
-
-    // ================= STATE MANAGEMENT =================
     const STORAGE_KEY_INV = 'inv_pro_data_v2';
     const STORAGE_KEY_ORDERS = 'inv_pro_orders_data_v1';
     
     let inventory = [];
-    // Orders Structure: { showroom: [], cafe: [] }
     let ordersData = { showroom: [], cafe: [] };
-
     let currentView = 'home';
     let selectedItemIdx = -1;
     let invMode = 'add'; 
-    
-    // Order View State
-    let activeOrderSource = 'showroom'; // 'showroom' or 'cafe' (for input)
-    let activeOrdersTab = 'showroom';   // 'showroom' or 'cafe' (for viewing table)
+    let activeOrderSource = 'showroom';
+    let activeOrdersTab = 'showroom';
+    let editingOrderId = null;
 
-    // ================= INIT & NAVIGATION =================
     function init() {
-        // Load Inventory
         const data = localStorage.getItem(STORAGE_KEY_INV);
         if (data) {
             inventory = JSON.parse(data);
@@ -612,39 +571,32 @@
             if (!item.notes) item.notes = "";
         });
 
-        // Load Orders
         const ordData = localStorage.getItem(STORAGE_KEY_ORDERS);
         if (ordData) {
             ordersData = JSON.parse(ordData);
         }
-        // Ensure structure
         if(!ordersData.showroom) ordersData.showroom = [];
         if(!ordersData.cafe) ordersData.cafe = [];
         
-        // Ensure status field in orders
         ['showroom', 'cafe'].forEach(key => {
             ordersData[key].forEach(o => {
-                if(!o.status) o.status = 'pending'; // Default status for existing data
+                if(!o.status) o.status = 'pending';
             });
         });
 
-        updateDashboardStats(); // Initial Dashboard Calculation
+        updateDashboardStats();
         switchView('home');
 
-        // Setup Enter Key Listeners
         document.getElementById('inv-input-qty').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') submitInventory();
         });
         
-        // Setup Date Default for Orders
         document.getElementById('ord-date').valueAsDate = new Date();
     }
 
     function updateDashboardStats() {
-        // 1. Inventory Count
         document.getElementById('dash-inv-count').innerText = inventory.length;
 
-        // 2. Expiry Alerts (Less than 30 days)
         let expAlerts = 0;
         inventory.forEach(item => {
             item.batches.forEach(b => {
@@ -654,11 +606,9 @@
         });
         document.getElementById('dash-exp-count').innerText = expAlerts;
 
-        // 3. Notes Count
         const notesCount = inventory.filter(i => i.notes && i.notes.length > 2).length;
         document.getElementById('dash-notes-count').innerText = notesCount;
 
-        // 4. Pending Orders Count
         const pendingShowroom = ordersData.showroom.filter(o => o.status !== 'completed').length;
         const pendingCafe = ordersData.cafe.filter(o => o.status !== 'completed').length;
         document.getElementById('dash-orders-count').innerText = pendingShowroom + pendingCafe;
@@ -666,19 +616,15 @@
 
     function switchView(viewName) {
         currentView = viewName;
-        // Hide all views
         ['view-home', 'view-inventory', 'view-expiry', 'view-notes', 'view-orders'].forEach(id => {
             document.getElementById(id).classList.add('hidden');
         });
         
-        // Show target view
         document.getElementById(`view-${viewName}`).classList.remove('hidden');
         document.getElementById(`view-${viewName}`).classList.add('fade-in');
 
-        // Reset selections
         selectedItemIdx = -1;
         
-        // Refresh Data
         if (viewName === 'inventory') {
             resetInvUI();
             renderInvTable();
@@ -712,8 +658,7 @@
         showToast('تم حفظ جميع البيانات بنجاح', 'success');
     }
 
-    // ================= ORDERS LOGIC (DEVELOPED) =================
-    
+    // ========== ORDERS ==========
     function setOrderSource(source) {
         activeOrderSource = source;
         const btnS = document.getElementById('btn-src-showroom');
@@ -751,54 +696,99 @@
         renderOrdersTable();
     }
 
-    function addNewOrder() {
+    function saveOrder() {
         const num = document.getElementById('ord-num').value;
         const company = document.getElementById('ord-company').value;
         const type = document.getElementById('ord-type').value;
         const date = document.getElementById('ord-date').value;
+        const editId = document.getElementById('ord-edit-id').value;
 
         if(!num || !company || !date) {
             showToast('يرجى ملء جميع الحقول', 'error');
             return;
         }
 
-        const newOrder = {
-            id: Date.now(),
-            number: num,
-            company: company,
-            type: type,
-            date: date,
-            status: 'pending' // New Status Field
-        };
-
-        if(activeOrderSource === 'showroom') {
-            ordersData.showroom.unshift(newOrder);
+        if(editId) {
+            const list = ordersData[activeOrderSource];
+            const order = list.find(o => o.id === parseInt(editId));
+            if(order) {
+                order.number = num;
+                order.company = company;
+                order.type = type;
+                order.date = date;
+                showToast('تم تحديث الطلب بنجاح');
+                cancelOrderEdit();
+            }
         } else {
-            ordersData.cafe.unshift(newOrder);
+            const newOrder = {
+                id: Date.now(),
+                number: num,
+                company: company,
+                type: type,
+                date: date,
+                status: 'pending'
+            };
+
+            if(activeOrderSource === 'showroom') {
+                ordersData.showroom.unshift(newOrder);
+            } else {
+                ordersData.cafe.unshift(newOrder);
+            }
+            showToast('تم إضافة الطلب بنجاح');
         }
 
         saveAllData();
         
         if(activeOrderSource === activeOrdersTab) {
             renderOrdersTable();
-        } else {
-            showToast(`تمت الإضافة إلى ${activeOrderSource === 'showroom' ? 'المعرض' : 'الكافيه'}`, 'success');
         }
 
         document.getElementById('ord-num').value = '';
         document.getElementById('ord-company').value = '';
+        document.getElementById('ord-type').selectedIndex = 0;
+        document.getElementById('ord-date').valueAsDate = new Date();
     }
 
-    // Toggle Order Status (Complete/Pending)
+    function editOrder(id) {
+        const list = ordersData[activeOrdersTab];
+        const order = list.find(o => o.id === id);
+        if(!order) return;
+
+        setOrderSource(activeOrdersTab);
+        
+        document.getElementById('ord-num').value = order.number;
+        document.getElementById('ord-company').value = order.company;
+        document.getElementById('ord-type').value = order.type;
+        document.getElementById('ord-date').value = order.date;
+        document.getElementById('ord-edit-id').value = order.id;
+        
+        document.getElementById('order-form-title').innerText = 'تعديل الطلب';
+        document.getElementById('order-save-btn-text').innerText = 'حفظ التعديلات';
+        document.getElementById('cancel-edit-btn').classList.remove('hidden');
+        
+        document.getElementById('ord-num').focus();
+    }
+
+    function cancelOrderEdit() {
+        document.getElementById('ord-num').value = '';
+        document.getElementById('ord-company').value = '';
+        document.getElementById('ord-type').selectedIndex = 0;
+        document.getElementById('ord-date').valueAsDate = new Date();
+        document.getElementById('ord-edit-id').value = '';
+        
+        document.getElementById('order-form-title').innerText = 'إضافة طلب جديد';
+        document.getElementById('order-save-btn-text').innerText = 'تسجيل الطلب';
+        document.getElementById('cancel-edit-btn').classList.add('hidden');
+    }
+
     function toggleOrderStatus(id) {
         const list = ordersData[activeOrdersTab];
         const order = list.find(o => o.id === id);
         if(order) {
             order.status = order.status === 'completed' ? 'pending' : 'completed';
-            // Move completed to bottom, pending to top
             ordersData[activeOrdersTab].sort((a, b) => {
-                if (a.status === b.status) return b.id - a.id; // Newest first
-                return a.status === 'completed' ? 1 : -1; // Pending first
+                if (a.status === b.status) return b.id - a.id;
+                return a.status === 'completed' ? 1 : -1;
             });
             saveAllData();
             renderOrdersTable();
@@ -854,6 +844,9 @@
                    ${daysDiff} يوم ${warningIcon}
                 </td>
                 <td class="p-3 text-center no-print">
+                    <button onclick="editOrder(${order.id})" class="text-blue-500 hover:text-blue-700 transition px-2 ml-1">
+                        <i class="fa-solid fa-edit"></i>
+                    </button>
                     <button onclick="deleteOrder(${order.id})" class="text-slate-400 hover:text-red-500 transition px-2">
                         <i class="fa-solid fa-trash"></i>
                     </button>
@@ -881,48 +874,28 @@
         }
     }
 
-
-    // ================= SHARED HELPERS =================
-    function showToast(msg, type='success') {
-        const t = document.getElementById('toast');
-        t.innerText = msg;
-        t.className = `fixed bottom-5 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl font-bold text-sm transition-all duration-300 z-[100] ${type === 'error' ? 'bg-red-600 text-white' : 'bg-brand-900 text-white'}`;
-        t.style.opacity = '1';
-        t.style.bottom = '30px';
-        setTimeout(() => {
-            t.style.opacity = '0';
-            t.style.bottom = '5px';
-        }, 2000);
+    // ========== INVENTORY ==========
+    function resetInvUI() {
+        document.getElementById('inv-empty').classList.remove('hidden');
+        document.getElementById('inv-card').classList.add('hidden');
+        document.getElementById('inv-search').value = '';
+        document.getElementById('inv-results').classList.add('hidden');
     }
 
-    function formatDateDisplay(dateStr) {
-        if (!dateStr) return '-';
-        const parts = dateStr.split('-');
-        if (parts.length !== 3) return dateStr;
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-
-    function handleSearch(context, query) {
-        query = query.toLowerCase();
-        const resultsId = context === 'inventory' ? 'inv-results' : (context === 'expiry' ? 'exp-results' : 'note-results');
-        const list = document.getElementById(resultsId);
+    function handleInventorySearch(query) {
+        query = query.toLowerCase().trim();
+        const list = document.getElementById('inv-results');
         list.innerHTML = '';
         
         if (!query) {
             list.classList.add('hidden');
-            if (context === 'inventory') renderInvTable();
-            if (context === 'expiry') renderExpTable();
-            if (context === 'notes') renderNoteTable();
+            renderInvTable();
             return;
         }
 
-        let matches = inventory.map((item, idx) => ({ ...item, idx })).filter(item => {
-            const basicMatch = item.name.toLowerCase().includes(query) || item.code.includes(query);
-            if (context === 'notes') {
-                return basicMatch || item.notes.toLowerCase().includes(query) || item.roastery.toLowerCase().includes(query);
-            }
-            return basicMatch;
-        });
+        let matches = inventory.map((item, idx) => ({ ...item, idx })).filter(item => 
+            item.name.toLowerCase().includes(query) || item.code.toLowerCase().includes(query)
+        );
 
         const dropdownMatches = matches.slice(0, 5);
 
@@ -932,68 +905,41 @@
                 const li = document.createElement('li');
                 li.className = 'p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer flex justify-between items-center';
                 li.innerHTML = `<span class="font-bold text-slate-700 text-xs">${m.name}</span> <span class="text-[10px] font-mono bg-slate-100 px-1 rounded">${m.code}</span>`;
-                li.onclick = () => selectItem(m.idx, context);
+                li.onclick = () => selectItemInventory(m.idx);
                 list.appendChild(li);
             });
         } else {
-             if (context === 'inventory' && query.length > 1) {
+            if (query.length > 1) {
                 const li = document.createElement('li');
                 li.className = 'p-3 bg-brand-50 hover:bg-brand-100 cursor-pointer text-brand-700 font-bold text-xs text-center';
                 li.innerHTML = `<i class="fa-solid fa-plus"></i> إضافة صنف جديد: ${query}`;
                 li.onclick = () => openAddItemModal(query);
                 list.appendChild(li);
                 list.classList.remove('hidden');
-             } else {
-                 list.classList.add('hidden');
-             }
+            } else {
+                list.classList.add('hidden');
+            }
         }
         
-        if (context === 'notes') renderNoteTable(query);
-        else if (context === 'expiry') renderExpTable(query);
-        else renderInvTable(query);
+        renderInvTable(query);
     }
 
-    function selectItem(idx, context) {
+    function selectItemInventory(idx) {
         selectedItemIdx = idx;
         const item = inventory[idx];
         
-        document.querySelectorAll('ul[id$="-results"]').forEach(ul => ul.classList.add('hidden'));
-        document.querySelectorAll('input[id$="-search"]').forEach(inp => inp.value = '');
+        document.getElementById('inv-results').classList.add('hidden');
+        document.getElementById('inv-search').value = '';
 
-        if (context === 'inventory') {
-            document.getElementById('inv-empty').classList.add('hidden');
-            document.getElementById('inv-card').classList.remove('hidden');
-            document.getElementById('inv-name').innerText = item.name;
-            document.getElementById('inv-code').innerText = item.code;
-            document.getElementById('inv-sys-qty').innerText = item.sysQty;
-            document.getElementById('inv-current-qty').innerText = item.actualQty;
-            document.getElementById('inv-input-qty').value = '';
-            document.getElementById('inv-input-qty').focus();
-            renderInvTable(); 
-        } 
-        else if (context === 'expiry') {
-            document.getElementById('exp-empty').classList.add('hidden');
-            document.getElementById('exp-card').classList.remove('hidden');
-            document.getElementById('exp-name').innerText = item.name;
-            document.getElementById('exp-date').value = '';
-            document.getElementById('exp-qty').value = '';
-            document.getElementById('exp-duration').value = '12'; // Reset default
-            renderBatchesList(item);
-        }
-        else if (context === 'notes') {
-            document.getElementById('note-empty').classList.add('hidden');
-            document.getElementById('note-card').classList.remove('hidden');
-            document.getElementById('note-name').innerText = item.name;
-            document.getElementById('note-code').innerText = item.code;
-            document.getElementById('note-roastery').value = item.roastery || '';
-            document.getElementById('note-text').value = item.notes || '';
-        }
-    }
-
-    // ================= INVENTORY LOGIC =================
-    function resetInvUI() {
-        document.getElementById('inv-empty').classList.remove('hidden');
-        document.getElementById('inv-card').classList.add('hidden');
+        document.getElementById('inv-empty').classList.add('hidden');
+        document.getElementById('inv-card').classList.remove('hidden');
+        document.getElementById('inv-name').innerText = item.name;
+        document.getElementById('inv-code').innerText = item.code;
+        document.getElementById('inv-sys-qty').innerText = item.sysQty;
+        document.getElementById('inv-current-qty').innerText = item.actualQty;
+        document.getElementById('inv-input-qty').value = '';
+        document.getElementById('inv-input-qty').focus();
+        renderInvTable();
     }
 
     function setInvMode(m) {
@@ -1036,7 +982,7 @@
         tbody.innerHTML = '';
         
         inventory.forEach((item, idx) => {
-            if (filter && !item.name.toLowerCase().includes(filter) && !item.code.includes(filter)) return;
+            if (filter && !item.name.toLowerCase().includes(filter) && !item.code.toLowerCase().includes(filter)) return;
 
             const diff = item.actualQty - item.sysQty;
             let diffColor = diff === 0 ? 'text-emerald-500' : (diff > 0 ? 'text-blue-500' : 'text-red-500');
@@ -1044,7 +990,7 @@
 
             const tr = document.createElement('tr');
             tr.className = `hover:bg-blue-50 cursor-pointer transition ${idx === selectedItemIdx ? 'bg-blue-100' : ''}`;
-            tr.onclick = () => selectItem(idx, 'inventory');
+            tr.onclick = () => selectItemInventory(idx);
             tr.innerHTML = `
                 <td class="p-3 font-mono text-slate-500">${item.code}</td>
                 <td class="p-3 font-bold text-slate-700">${item.name}</td>
@@ -1074,12 +1020,12 @@
             inventory.push({ code, name, sysQty: sys, actualQty: 0, batches: [], roastery: '', notes: '' });
             document.getElementById('addItemModal').classList.add('hidden');
             saveAllData();
-            selectItem(inventory.length - 1, 'inventory');
+            selectItemInventory(inventory.length - 1);
             showToast('تم إضافة الصنف بنجاح');
         }
     }
 
-    // ================= EXPIRY / BATCHES LOGIC =================
+    // ========== EXPIRY ==========
     function resetExpUI() {
         document.getElementById('exp-empty').classList.remove('hidden');
         document.getElementById('exp-card').classList.add('hidden');
@@ -1089,7 +1035,7 @@
         if (selectedItemIdx === -1) return;
         const dateStr = document.getElementById('exp-date').value;
         const qty = Number(document.getElementById('exp-qty').value);
-        const duration = Number(document.getElementById('exp-duration').value) || 12; // Default 12 Months
+        const duration = Number(document.getElementById('exp-duration').value) || 12;
 
         if (!dateStr || !qty) {
             showToast('يرجى إدخال التاريخ والكمية', 'error');
@@ -1105,6 +1051,7 @@
         renderExpTable();
         
         document.getElementById('exp-qty').value = '';
+        document.getElementById('exp-date').value = '';
         showToast('تم إضافة الدفعة');
     }
 
@@ -1114,6 +1061,7 @@
          saveAllData();
          renderBatchesList(inventory[selectedItemIdx]);
          renderExpTable();
+         showToast('تم حذف الدفعة');
     }
 
     function renderBatchesList(item) {
@@ -1147,7 +1095,7 @@
     function calcExpiry(roastDateStr, durationMonths = 12) {
         const prodDate = new Date(roastDateStr);
         const expDate = new Date(prodDate);
-        expDate.setMonth(expDate.getMonth() + durationMonths); // Flexible Duration
+        expDate.setMonth(expDate.getMonth() + durationMonths);
         
         const today = new Date();
         const diffTime = expDate - today;
@@ -1218,7 +1166,7 @@
         });
     }
 
-    // ================= NOTES LOGIC =================
+    // ========== NOTES ==========
     function resetNoteUI() {
         document.getElementById('note-empty').classList.remove('hidden');
         document.getElementById('note-card').classList.add('hidden');
@@ -1258,8 +1206,93 @@
         });
     }
 
-    // ================= DATA IMPORT/EXPORT FUNCTIONS =================
-    
+    // ========== SHARED ==========
+    function showToast(msg, type='success') {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.className = `fixed bottom-5 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl font-bold text-sm transition-all duration-300 z-[100] ${type === 'error' ? 'bg-red-600 text-white' : 'bg-brand-900 text-white'}`;
+        t.style.opacity = '1';
+        t.style.bottom = '30px';
+        setTimeout(() => {
+            t.style.opacity = '0';
+            t.style.bottom = '5px';
+        }, 2000);
+    }
+
+    function formatDateDisplay(dateStr) {
+        if (!dateStr) return '-';
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return dateStr;
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function handleSearch(context, query) {
+        query = query.toLowerCase();
+        const resultsId = context === 'expiry' ? 'exp-results' : 'note-results';
+        const list = document.getElementById(resultsId);
+        list.innerHTML = '';
+        
+        if (!query) {
+            list.classList.add('hidden');
+            if (context === 'expiry') renderExpTable();
+            if (context === 'notes') renderNoteTable();
+            return;
+        }
+
+        let matches = inventory.map((item, idx) => ({ ...item, idx })).filter(item => {
+            const basicMatch = item.name.toLowerCase().includes(query) || item.code.includes(query);
+            if (context === 'notes') {
+                return basicMatch || item.notes.toLowerCase().includes(query) || item.roastery.toLowerCase().includes(query);
+            }
+            return basicMatch;
+        });
+
+        const dropdownMatches = matches.slice(0, 5);
+
+        if (dropdownMatches.length > 0) {
+            list.classList.remove('hidden');
+            dropdownMatches.forEach(m => {
+                const li = document.createElement('li');
+                li.className = 'p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer flex justify-between items-center';
+                li.innerHTML = `<span class="font-bold text-slate-700 text-xs">${m.name}</span> <span class="text-[10px] font-mono bg-slate-100 px-1 rounded">${m.code}</span>`;
+                li.onclick = () => selectItem(m.idx, context);
+                list.appendChild(li);
+            });
+        } else {
+            list.classList.add('hidden');
+        }
+        
+        if (context === 'notes') renderNoteTable(query);
+        else if (context === 'expiry') renderExpTable(query);
+    }
+
+    function selectItem(idx, context) {
+        selectedItemIdx = idx;
+        const item = inventory[idx];
+        
+        document.querySelectorAll('ul[id$="-results"]').forEach(ul => ul.classList.add('hidden'));
+        document.querySelectorAll('input[id$="-search"]').forEach(inp => inp.value = '');
+
+        if (context === 'expiry') {
+            document.getElementById('exp-empty').classList.add('hidden');
+            document.getElementById('exp-card').classList.remove('hidden');
+            document.getElementById('exp-name').innerText = item.name;
+            document.getElementById('exp-date').value = '';
+            document.getElementById('exp-qty').value = '';
+            document.getElementById('exp-duration').value = '12';
+            renderBatchesList(item);
+        }
+        else if (context === 'notes') {
+            document.getElementById('note-empty').classList.add('hidden');
+            document.getElementById('note-card').classList.remove('hidden');
+            document.getElementById('note-name').innerText = item.name;
+            document.getElementById('note-code').innerText = item.code;
+            document.getElementById('note-roastery').value = item.roastery || '';
+            document.getElementById('note-text').value = item.notes || '';
+        }
+    }
+
+    // ========== IMPORT/EXPORT ==========
     function updateOrAddItem(code, name, sysQty, roastery = null, notes = null) {
         let item = inventory.find(x => x.code === String(code));
         if (!item) {
@@ -1281,7 +1314,6 @@
         }
     }
 
-    // 1. GLOBAL (HOME)
     function handleGlobalImport(evt) {
         processExcel(evt, (row) => {
             const code = row[0];
@@ -1328,7 +1360,6 @@
         downloadExcel(data, "التقرير_الشامل_المفصل");
     }
 
-    // 2. INVENTORY PAGE
     function handleInventoryImport(evt) {
         processExcel(evt, (row) => {
             const code = row[0];
@@ -1354,7 +1385,6 @@
         downloadExcel(data, "تقرير_الجرد");
     }
 
-    // 3. EXPIRY PAGE
     function handleExpiryImport(evt) {
         processExcel(evt, (row) => {
             const code = row[0];
@@ -1391,7 +1421,6 @@
         downloadExcel(data, "تقرير_تواريخ_الانتهاء_المفصل");
     }
 
-    // 4. NOTES PAGE
     function handleNotesImport(evt) {
         processExcel(evt, (row) => {
             const code = row[0];
@@ -1417,7 +1446,6 @@
         downloadExcel(data, "تقرير_الإيحاءات");
     }
 
-    // --- Excel Helpers ---
     function processExcel(evt, rowCallback, successMsg) {
         const file = evt.target.files[0];
         if (!file) return;
@@ -1434,7 +1462,6 @@
                 }
                 saveAllData();
                 
-                // Refresh Current View
                 if (currentView === 'inventory') renderInvTable();
                 else if (currentView === 'expiry') renderExpTable();
                 else if (currentView === 'notes') renderNoteTable();
@@ -1457,8 +1484,16 @@
         XLSX.writeFile(wb, `${fileName}.xlsx`);
     }
 
-    // Start
     window.addEventListener('load', init);
+
+    // Show print footer on print
+    window.addEventListener('beforeprint', function() {
+        document.querySelector('.print-footer').classList.remove('hidden');
+    });
+    
+    window.addEventListener('afterprint', function() {
+        document.querySelector('.print-footer').classList.add('hidden');
+    });
 
 </script>
 </body>
