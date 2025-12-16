@@ -61,8 +61,9 @@
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
@@ -73,6 +74,27 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .btn-pulse:active { transform: scale(0.95); }
+
+        /* Table Fixed Header Styles */
+        .table-container {
+            overflow-y: auto;
+            max-height: 100%;
+            border-radius: 0.5rem;
+        }
+        thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8fafc; /* slate-50 */
+            z-index: 10;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        /* تحسين التفاف النص في الطباعة والعرض */
+        .wrap-text {
+            white-space: normal !important;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
 
         @media print {
             body { background: white; overflow: visible; height: auto; }
@@ -85,6 +107,9 @@
             .bg-red-50 { background-color: #ffebee !important; -webkit-print-color-adjust: exact; }
             .bg-green-50 { background-color: #e8f5e9 !important; -webkit-print-color-adjust: exact; }
             .print-footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 9pt; padding: 10px; border-top: 1px solid #ddd; }
+            
+            /* تأكيد التفاف النص في الطباعة */
+            .wrap-text { white-space: normal !important; }
         }
     </style>
 </head>
@@ -98,8 +123,8 @@
                 <i class="fa-solid fa-layer-group text-xl"></i>
             </div>
             <div>
-                <h1 class="text-lg font-black leading-none">نظام الإدارة المتكامل - تطوير أحمد الطيب 0550360705</h1>
-                <span class="text-[10px] text-slate-400 font-bold tracking-wide">نسخة تجريبية V2.0</span>
+                <h1 class="text-lg font-black leading-none">نظام الإدارة المتكامل - تطوير أحمد الطيب</h1>
+                <span class="text-[10px] text-slate-400 font-bold tracking-wide">نسخة محسنة V2.4</span>
             </div>
         </div>
 
@@ -133,7 +158,7 @@
                     <span id="dash-inv-count" class="text-3xl font-black text-slate-800">0</span>
                 </div>
                 <h3 class="text-lg font-bold text-slate-700">الجرد العام</h3>
-                <p class="text-xs text-slate-400 mt-1">إجمالي الأصناف المسجلة</p>
+                <p class="text-xs text-slate-400 mt-1">إدارة الكميات وحذف الأصناف</p>
             </div>
 
             <div onclick="switchView('expiry')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-accent-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
@@ -144,7 +169,7 @@
                     <span id="dash-exp-count" class="text-3xl font-black text-amber-600">0</span>
                 </div>
                 <h3 class="text-lg font-bold text-slate-700">تنبيهات الصلاحية</h3>
-                <p class="text-xs text-slate-400 mt-1">دفعات تنتهي خلال 30 يوم</p>
+                <p class="text-xs text-slate-400 mt-1">متابعة التواريخ والدفعات</p>
             </div>
 
             <div onclick="switchView('notes')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-emerald-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
@@ -178,10 +203,14 @@
                 <input type="file" id="fileInputGlobal" class="hidden" accept=".xlsx,.xls" onchange="handleGlobalImport(event)">
                 
                 <button onclick="exportGlobalData()" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition flex items-center gap-2 shadow-lg shadow-slate-500/30 btn-pulse">
-                    <i class="fa-solid fa-file-export"></i> تصدير (الجرد فقط)
+                    <i class="fa-solid fa-file-export"></i> تصدير (التقرير الشامل)
                 </button>
             </div>
-            <p class="text-xs text-slate-400">تلميح: استخدم قسم الطلبات لمتابعة المهام اليومية وإنجازها.</p>
+        </div>
+             <div class="mt-12 w-full max-w-5xl flex flex-col items-center">
+            <button onclick="clearAllData()" class="px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition flex items-center gap-2 shadow-lg shadow-red-500/30 btn-pulse mt-8">
+                <i class="fa-solid fa-skull-crossbones"></i> حذف جميع بيانات التطبيق
+            </button>
         </div>
     </div>
 
@@ -228,6 +257,11 @@
                     <label class="text-[11px] font-bold text-slate-500 mb-1 block">تاريخ الطلب</label>
                     <input id="ord-date" type="date" class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none">
                 </div>
+                
+                <div>
+                    <label class="text-[11px] font-bold text-slate-500 mb-1 block">ملاحظات إضافية</label>
+                    <textarea id="ord-notes" placeholder="أي تفاصيل إضافية..." class="w-full h-16 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-purple-500 outline-none resize-none"></textarea>
+                </div>
 
                 <input type="hidden" id="ord-edit-id" value="">
                 
@@ -237,6 +271,10 @@
                 
                 <button onclick="cancelOrderEdit()" id="cancel-edit-btn" class="hidden w-full h-10 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition">
                     <i class="fa-solid fa-times"></i> إلغاء التعديل
+                </button>
+                
+                <button onclick="clearPageData('orders')" class="w-full h-10 bg-red-100 hover:bg-red-200 text-red-600 rounded-xl font-bold transition btn-pulse mt-4">
+                    <i class="fa-solid fa-trash-alt"></i> حذف بيانات الطلبات
                 </button>
             </div>
         </aside>
@@ -256,22 +294,20 @@
                     <h3 id="orders-list-title" class="font-bold text-slate-700">قائمة الطلبات الجارية</h3>
                     <div class="flex gap-2 items-center">
                         <button onclick="window.print()" class="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700"><i class="fa-solid fa-print"></i> طباعة</button>
-                         <span class="text-[10px] bg-red-100 text-red-600 px-2 py-1 rounded font-bold flex items-center gap-1">
-                            <i class="fa-solid fa-circle-exclamation"></i> متأخر (> 7 أيام)
-                         </span>
                     </div>
                 </div>
-                <div class="overflow-auto flex-1 p-4">
-                    <table class="w-full text-right text-xs sm:text-sm">
-                        <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10">
+                <div class="table-container flex-1 p-4">
+                    <table class="w-full text-right text-xs sm:text-sm border-collapse">
+                        <thead class="bg-slate-50 text-slate-500 font-bold">
                             <tr>
-                                <th class="p-3">الحالة</th>
-                                <th class="p-3">رقم الطلب</th>
-                                <th class="p-3">الجهة / المحمصة</th>
-                                <th class="p-3">نوع الطلب</th>
-                                <th class="p-3 text-center">تاريخ الطلب</th>
-                                <th class="p-3 text-center">المدة</th>
-                                <th class="p-3 text-center no-print">إجراء</th>
+                                <th class="p-3 w-16">الحالة</th>
+                                <th class="p-3 w-32">رقم الطلب</th>
+                                <th class="p-3 w-32">الجهة / المحمصة</th>
+                                <th class="p-3 w-28">نوع الطلب</th>
+                                <th class="p-3">ملاحظات</th>
+                                <th class="p-3 text-center w-28">تاريخ الطلب</th>
+                                <th class="p-3 text-center w-24">المدة</th>
+                                <th class="p-3 text-center w-24 no-print">إجراء</th>
                             </tr>
                         </thead>
                         <tbody id="orders-table-body" class="divide-y divide-slate-100"></tbody>
@@ -285,7 +321,7 @@
         </main>
     </div>
 
-    <!-- VIEW: INVENTORY -->
+    <!-- VIEW: INVENTORY (الجرد) -->
     <div id="view-inventory" class="absolute inset-0 flex hidden bg-slate-100">
         <aside class="w-full lg:w-[400px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl no-print">
             <div class="p-5 bg-slate-50 border-b border-slate-200">
@@ -305,12 +341,21 @@
                         <i class="fa-solid fa-download text-brand-500"></i> تصدير
                     </button>
                 </div>
+
+                <!-- زر حذف بيانات الجرد -->
+                <button onclick="clearPageData('inventory')" class="w-full py-2 bg-red-100 border border-red-200 rounded-lg text-xs font-bold text-red-600 hover:bg-red-50 mt-3 transition btn-pulse">
+                    <i class="fa-solid fa-trash-alt"></i> تصفير كميات الجرد فقط
+                </button>
             </div>
 
             <div id="inv-card" class="hidden flex-1 p-5 flex flex-col gap-4 overflow-y-auto">
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center relative group">
                     <h2 id="inv-name" class="text-lg font-black text-brand-900 mb-1">اسم الصنف</h2>
                     <span id="inv-code" class="text-xs font-mono text-slate-500 bg-white px-2 py-1 rounded border">CODE</span>
+                    
+                    <button onclick="deleteCurrentItem()" class="absolute top-2 left-2 text-red-400 hover:text-red-600 bg-white p-2 rounded-lg shadow-sm border border-red-100 transition" title="حذف الصنف نهائياً">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -346,15 +391,15 @@
                     <h3 class="font-bold text-brand-900">سجل الجرد</h3>
                     <button onclick="window.print()" class="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700"><i class="fa-solid fa-print"></i> طباعة</button>
                 </div>
-                <div class="overflow-auto flex-1">
-                    <table class="w-full text-right text-xs sm:text-sm">
-                        <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10">
+                <div class="table-container flex-1">
+                    <table class="w-full text-right text-xs sm:text-sm border-collapse table-auto">
+                        <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10 shadow-sm">
                             <tr>
-                                <th class="p-3">الكود</th>
+                                <th class="p-3 w-32">الكود</th>
                                 <th class="p-3">الصنف</th>
-                                <th class="p-3 text-center">النظام</th>
-                                <th class="p-3 text-center bg-blue-50 text-blue-800">الفعلي</th>
-                                <th class="p-3 text-center">الفارق</th>
+                                <th class="p-3 text-center w-24">النظام</th>
+                                <th class="p-3 text-center w-24 bg-blue-50 text-blue-800">الفعلي</th>
+                                <th class="p-3 text-center w-24">الفارق</th>
                             </tr>
                         </thead>
                         <tbody id="inv-table-body" class="divide-y divide-slate-100"></tbody>
@@ -364,7 +409,7 @@
         </main>
     </div>
 
-    <!-- VIEW: EXPIRY -->
+    <!-- VIEW: EXPIRY (الصلاحية) -->
     <div id="view-expiry" class="absolute inset-0 flex hidden bg-slate-100">
         <aside class="w-full lg:w-[420px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl no-print">
              <div class="p-5 bg-amber-50 border-b border-amber-100">
@@ -384,12 +429,16 @@
                         <i class="fa-solid fa-download"></i> تصدير
                     </button>
                 </div>
+                
+                <button onclick="clearPageData('expiry')" class="w-full py-2 bg-red-100 border border-red-200 rounded-lg text-xs font-bold text-red-600 hover:bg-red-50 mt-3">
+                    <i class="fa-solid fa-trash-alt"></i> حذف سجل التواريخ فقط
+                </button>
             </div>
 
             <div id="exp-card" class="hidden flex-1 p-5 flex flex-col gap-4 overflow-y-auto">
                 <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                     <h2 id="exp-name" class="text-lg font-black text-slate-800">اسم الصنف</h2>
-                    <p class="text-xs text-slate-400 mt-1">إضافة تاريخ تحميص جديد</p>
+                    <p class="text-xs text-slate-400 mt-1">إدارة الدفعات والتواريخ</p>
                 </div>
 
                 <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100 space-y-3">
@@ -405,13 +454,18 @@
                         <label class="text-[11px] font-bold text-amber-800 mb-1 block">الكمية لهذه الدفعة</label>
                         <input id="exp-qty" type="number" placeholder="مثلاً: 12" class="w-full h-10 rounded-lg border border-amber-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20">
                     </div>
-                    <button onclick="addBatch()" class="w-full h-10 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-sm transition mt-2 btn-pulse">
-                        <i class="fa-solid fa-plus"></i> إضافة التاريخ
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="addBatch()" id="btn-add-batch" class="flex-1 h-10 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-sm transition mt-2 btn-pulse">
+                            <i class="fa-solid fa-plus"></i> إضافة التاريخ
+                        </button>
+                         <button onclick="cancelBatchEdit()" id="btn-cancel-batch" class="hidden flex-1 h-10 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold text-sm transition mt-2">
+                            إلغاء
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex-1">
-                    <h4 class="text-xs font-bold text-slate-500 mb-2">التواريخ المسجلة:</h4>
+                    <h4 class="text-xs font-bold text-slate-500 mb-2">الدفعات والتواريخ المسجلة:</h4>
                     <div id="exp-batches-list" class="space-y-2"></div>
                 </div>
             </div>
@@ -427,16 +481,16 @@
                      <h3 class="font-bold text-slate-700">تقرير الصلاحية التفصيلي</h3>
                      <button onclick="window.print()" class="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700"><i class="fa-solid fa-print"></i> طباعة</button>
                  </div>
-                 <div class="overflow-auto flex-1">
-                     <table class="w-full text-right text-xs sm:text-sm">
-                         <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10">
+                 <div class="table-container flex-1">
+                     <table class="w-full text-right text-xs sm:text-sm border-collapse table-auto">
+                         <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10 shadow-sm">
                              <tr>
                                  <th class="p-3 w-32">الكود</th>
                                  <th class="p-3">الصنف</th>
-                                 <th class="p-3 text-center">تاريخ التحميص</th>
-                                 <th class="p-3 text-center">تاريخ الانتهاء</th>
-                                 <th class="p-3 text-center">الكمية</th>
-                                 <th class="p-3 text-center">الحالة</th>
+                                 <th class="p-3 text-center w-32">تاريخ التحميص</th>
+                                 <th class="p-3 text-center w-32">تاريخ الانتهاء</th>
+                                 <th class="p-3 text-center w-24">الكمية</th>
+                                 <th class="p-3 text-center w-32">الحالة</th>
                              </tr>
                          </thead>
                          <tbody id="exp-table-body" class="divide-y divide-slate-100"></tbody>
@@ -446,7 +500,7 @@
         </main>
     </div>
 
-    <!-- VIEW: NOTES -->
+    <!-- VIEW: NOTES (الملاحظات) -->
     <div id="view-notes" class="absolute inset-0 flex hidden bg-slate-100">
         <aside class="w-full lg:w-[400px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl no-print">
              <div class="p-5 bg-emerald-50 border-b border-emerald-100">
@@ -466,6 +520,11 @@
                         <i class="fa-solid fa-download"></i> تصدير
                     </button>
                 </div>
+
+                <!-- زر حذف بيانات الإيحاءات -->
+                <button onclick="clearPageData('notes')" class="w-full py-2 bg-red-100 border border-red-200 rounded-lg text-xs font-bold text-red-600 hover:bg-red-50 mt-3 transition btn-pulse">
+                    <i class="fa-solid fa-trash-alt"></i> تصفير سجل الإيحاءات فقط
+                </button>
             </div>
 
             <div id="note-card" class="hidden flex-1 p-5 flex flex-col gap-4 overflow-y-auto">
@@ -506,9 +565,9 @@
                      <h3 class="font-bold text-slate-700">دليل القهوة</h3>
                      <button onclick="window.print()" class="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700"><i class="fa-solid fa-print"></i> طباعة</button>
                  </div>
-                 <div class="overflow-auto flex-1">
-                     <table class="w-full text-right text-xs sm:text-sm">
-                         <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10">
+                 <div class="table-container flex-1">
+                     <table class="w-full text-right text-xs sm:text-sm border-collapse table-auto">
+                         <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10 shadow-sm">
                              <tr>
                                  <th class="p-3 w-24">الكود</th>
                                  <th class="p-3 w-48">الصنف</th>
@@ -548,8 +607,8 @@
 </div>
 
 <script>
-    const STORAGE_KEY_INV = 'inv_pro_data_v2';
-    const STORAGE_KEY_ORDERS = 'inv_pro_orders_data_v1';
+    const STORAGE_KEY_INV = 'ims_inventory_data_v2';
+    const STORAGE_KEY_ORDERS = 'ims_orders_data_v2';
     
     let inventory = [];
     let ordersData = { showroom: [], cafe: [] };
@@ -559,12 +618,21 @@
     let activeOrderSource = 'showroom';
     let activeOrdersTab = 'showroom';
     let editingOrderId = null;
+    let editingBatchId = null;
 
     function init() {
         const data = localStorage.getItem(STORAGE_KEY_INV);
         if (data) {
-            inventory = JSON.parse(data);
+            try {
+                inventory = JSON.parse(data);
+            } catch(e) {
+                console.error("Error parsing inventory", e);
+                inventory = [];
+            }
         }
+        
+        // Ensure data integrity
+        if (!Array.isArray(inventory)) inventory = [];
         inventory.forEach(item => {
             if (!item.batches) item.batches = [];
             if (!item.roastery) item.roastery = "";
@@ -573,7 +641,11 @@
 
         const ordData = localStorage.getItem(STORAGE_KEY_ORDERS);
         if (ordData) {
-            ordersData = JSON.parse(ordData);
+            try {
+                ordersData = JSON.parse(ordData);
+            } catch(e) {
+                ordersData = { showroom: [], cafe: [] };
+            }
         }
         if(!ordersData.showroom) ordersData.showroom = [];
         if(!ordersData.cafe) ordersData.cafe = [];
@@ -581,6 +653,7 @@
         ['showroom', 'cafe'].forEach(key => {
             ordersData[key].forEach(o => {
                 if(!o.status) o.status = 'pending';
+                if(!o.notes) o.notes = "";
             });
         });
 
@@ -599,10 +672,12 @@
 
         let expAlerts = 0;
         inventory.forEach(item => {
-            item.batches.forEach(b => {
-                 const { remainingDays } = calcExpiry(b.date, b.duration);
-                 if(remainingDays <= 30) expAlerts++;
-            });
+            if(item.batches && item.batches.length > 0) {
+                item.batches.forEach(b => {
+                     const { remainingDays } = calcExpiry(b.date, b.duration);
+                     if(remainingDays <= 30) expAlerts++;
+                });
+            }
         });
         document.getElementById('dash-exp-count').innerText = expAlerts;
 
@@ -658,6 +733,51 @@
         showToast('تم حفظ جميع البيانات بنجاح', 'success');
     }
 
+    function clearPageData(viewName) {
+        if (viewName === 'inventory') {
+            if (confirm('هل أنت متأكد من تصفير جميع الكميات الفعلية في صفحة الجرد؟ (لن يتم حذف الأصناف، فقط تصفير الكميات)')) {
+                inventory.forEach(item => item.actualQty = 0);
+                saveAllData();
+                renderInvTable();
+                resetInvUI();
+                showToast('تم تصفير كميات الجرد');
+            }
+        } else if (viewName === 'expiry') {
+             if (confirm('هل أنت متأكد من حذف جميع تواريخ الصلاحية المسجلة؟ (لن يتم حذف الأصناف)')) {
+                inventory.forEach(item => item.batches = []);
+                saveAllData();
+                renderExpTable();
+                resetExpUI();
+                showToast('تم حذف سجل التواريخ');
+            }
+        } else if (viewName === 'notes') {
+            if (confirm('هل أنت متأكد من حذف جميع الإيحاءات والملاحظات؟ (لن يتم حذف الأصناف)')) {
+                inventory.forEach(item => { item.notes = ""; item.roastery = ""; });
+                saveAllData();
+                renderNoteTable();
+                resetNoteUI();
+                showToast('تم حذف سجل الإيحاءات');
+            }
+        } else if (viewName === 'orders') {
+            if (confirm('هل أنت متأكد من حذف جميع بيانات الطلبات؟')) {
+                localStorage.removeItem(STORAGE_KEY_ORDERS);
+                ordersData = { showroom: [], cafe: [] };
+                saveAllData();
+                renderOrdersTable();
+                showToast('تم حذف بيانات الطلبات');
+            }
+        }
+    }
+
+    function clearAllData() {
+        if (confirm('هل أنت متأكد تماماً من حذف جميع بيانات التطبيق بالكامل (الجرد والطلبات والملاحظات)؟ لا يمكن التراجع عن هذا الإجراء!')) {
+            localStorage.removeItem(STORAGE_KEY_INV);
+            localStorage.removeItem(STORAGE_KEY_ORDERS);
+            showToast('تم حذف جميع بيانات التطبيق بنجاح', 'error');
+            setTimeout(() => location.reload(), 500); 
+        }
+    }
+
     // ========== ORDERS ==========
     function setOrderSource(source) {
         activeOrderSource = source;
@@ -701,6 +821,7 @@
         const company = document.getElementById('ord-company').value;
         const type = document.getElementById('ord-type').value;
         const date = document.getElementById('ord-date').value;
+        const notes = document.getElementById('ord-notes').value;
         const editId = document.getElementById('ord-edit-id').value;
 
         if(!num || !company || !date) {
@@ -716,6 +837,7 @@
                 order.company = company;
                 order.type = type;
                 order.date = date;
+                order.notes = notes;
                 showToast('تم تحديث الطلب بنجاح');
                 cancelOrderEdit();
             }
@@ -726,6 +848,7 @@
                 company: company,
                 type: type,
                 date: date,
+                notes: notes,
                 status: 'pending'
             };
 
@@ -747,6 +870,7 @@
         document.getElementById('ord-company').value = '';
         document.getElementById('ord-type').selectedIndex = 0;
         document.getElementById('ord-date').valueAsDate = new Date();
+        document.getElementById('ord-notes').value = '';
     }
 
     function editOrder(id) {
@@ -760,6 +884,7 @@
         document.getElementById('ord-company').value = order.company;
         document.getElementById('ord-type').value = order.type;
         document.getElementById('ord-date').value = order.date;
+        document.getElementById('ord-notes').value = order.notes || '';
         document.getElementById('ord-edit-id').value = order.id;
         
         document.getElementById('order-form-title').innerText = 'تعديل الطلب';
@@ -774,6 +899,7 @@
         document.getElementById('ord-company').value = '';
         document.getElementById('ord-type').selectedIndex = 0;
         document.getElementById('ord-date').valueAsDate = new Date();
+        document.getElementById('ord-notes').value = '';
         document.getElementById('ord-edit-id').value = '';
         
         document.getElementById('order-form-title').innerText = 'إضافة طلب جديد';
@@ -814,12 +940,12 @@
             const isCompleted = order.status === 'completed';
             const daysDiff = calculateDaysSince(order.date);
             
-            let rowClass = isCompleted ? "bg-slate-50 opacity-60 border-b border-slate-100" : "hover:bg-slate-50 transition border-b border-slate-100";
+            let rowClass = isCompleted ? "bg-slate-50 opacity-60" : "hover:bg-slate-50 transition";
             let daysClass = "font-bold text-slate-600";
             let warningIcon = "";
 
             if (!isCompleted && daysDiff > 7) {
-                rowClass = "bg-red-50 hover:bg-red-100 transition border-b border-red-100";
+                rowClass = "bg-red-50 hover:bg-red-100 transition";
                 daysClass = "font-black text-red-600";
                 warningIcon = `<i class="fa-solid fa-triangle-exclamation text-red-500 ml-1"></i>`;
             } else if (isCompleted) {
@@ -836,9 +962,10 @@
                 </td>
                 <td class="p-3 font-mono font-bold text-slate-700 ${isCompleted ? 'line-through decoration-slate-400' : ''}">${order.number}</td>
                 <td class="p-3 font-bold text-slate-800 ${isCompleted ? 'text-slate-500' : ''}">${order.company}</td>
-                <td class="p-3 text-xs">
-                    <span class="px-2 py-1 rounded bg-white border border-slate-200 text-slate-600">${order.type}</span>
+                <td class="p-3 text-xs w-28 wrap-text">
+                    <span class="px-2 py-1 rounded bg-white border border-slate-200 text-slate-600 block">${order.type}</span>
                 </td>
+                <td class="p-3 text-xs text-slate-500 wrap-text max-w-[150px]">${order.notes || '-'}</td>
                 <td class="p-3 text-center text-slate-500 text-xs font-mono">${formatDateDisplay(order.date)}</td>
                 <td class="p-3 text-center ${daysClass}">
                    ${daysDiff} يوم ${warningIcon}
@@ -891,6 +1018,13 @@
             list.classList.add('hidden');
             renderInvTable();
             return;
+        }
+
+        // Direct Scan Check: If exact match found, select immediately
+        const exactMatchIndex = inventory.findIndex(item => item.code.toLowerCase() === query);
+        if (exactMatchIndex !== -1) {
+             selectItemInventory(exactMatchIndex);
+             return;
         }
 
         let matches = inventory.map((item, idx) => ({ ...item, idx })).filter(item => 
@@ -977,6 +1111,19 @@
         showToast('تم تحديث الكمية');
     }
 
+    // New Function to delete item from inventory
+    function deleteCurrentItem() {
+        if (selectedItemIdx === -1) return;
+        
+        if (confirm(`هل أنت متأكد من حذف الصنف "${inventory[selectedItemIdx].name}" نهائياً من النظام؟`)) {
+            inventory.splice(selectedItemIdx, 1);
+            saveAllData();
+            resetInvUI();
+            renderInvTable();
+            showToast('تم حذف الصنف بنجاح', 'error');
+        }
+    }
+
     function renderInvTable(filter = '') {
         const tbody = document.getElementById('inv-table-body');
         tbody.innerHTML = '';
@@ -1029,6 +1176,7 @@
     function resetExpUI() {
         document.getElementById('exp-empty').classList.remove('hidden');
         document.getElementById('exp-card').classList.add('hidden');
+        cancelBatchEdit();
     }
 
     function addBatch() {
@@ -1042,8 +1190,21 @@
             return;
         }
 
-        const newBatch = { id: Date.now(), date: dateStr, qty: qty, duration: duration };
-        inventory[selectedItemIdx].batches.push(newBatch);
+        if (editingBatchId) {
+             const batchIndex = inventory[selectedItemIdx].batches.findIndex(b => b.id === editingBatchId);
+             if (batchIndex !== -1) {
+                 inventory[selectedItemIdx].batches[batchIndex].date = dateStr;
+                 inventory[selectedItemIdx].batches[batchIndex].qty = qty;
+                 inventory[selectedItemIdx].batches[batchIndex].duration = duration;
+                 showToast('تم تحديث الدفعة');
+                 cancelBatchEdit();
+             }
+        } else {
+            const newBatch = { id: Date.now(), date: dateStr, qty: qty, duration: duration };
+            inventory[selectedItemIdx].batches.push(newBatch);
+            showToast('تم إضافة الدفعة');
+        }
+
         inventory[selectedItemIdx].batches.sort((a, b) => new Date(a.date) - new Date(b.date));
         
         saveAllData();
@@ -1052,23 +1213,48 @@
         
         document.getElementById('exp-qty').value = '';
         document.getElementById('exp-date').value = '';
-        showToast('تم إضافة الدفعة');
+    }
+    
+    function editBatch(batchId) {
+        if (selectedItemIdx === -1) return;
+        const batch = inventory[selectedItemIdx].batches.find(b => b.id === batchId);
+        if(batch) {
+            document.getElementById('exp-date').value = batch.date;
+            document.getElementById('exp-qty').value = batch.qty;
+            document.getElementById('exp-duration').value = batch.duration;
+            
+            editingBatchId = batchId;
+            document.getElementById('btn-add-batch').innerHTML = '<i class="fa-solid fa-save"></i> حفظ التعديل';
+            document.getElementById('btn-cancel-batch').classList.remove('hidden');
+        }
+    }
+
+    function cancelBatchEdit() {
+        editingBatchId = null;
+        document.getElementById('exp-qty').value = '';
+        document.getElementById('exp-date').value = '';
+        document.getElementById('exp-duration').value = '12';
+        document.getElementById('btn-add-batch').innerHTML = '<i class="fa-solid fa-plus"></i> إضافة التاريخ';
+        document.getElementById('btn-cancel-batch').classList.add('hidden');
     }
 
     function deleteBatch(batchId) {
          if (selectedItemIdx === -1) return;
-         inventory[selectedItemIdx].batches = inventory[selectedItemIdx].batches.filter(b => b.id !== batchId);
-         saveAllData();
-         renderBatchesList(inventory[selectedItemIdx]);
-         renderExpTable();
-         showToast('تم حذف الدفعة');
+         if(confirm('حذف هذا التاريخ؟')) {
+            inventory[selectedItemIdx].batches = inventory[selectedItemIdx].batches.filter(b => b.id !== batchId);
+            saveAllData();
+            renderBatchesList(inventory[selectedItemIdx]);
+            renderExpTable();
+            showToast('تم حذف الدفعة');
+            if (editingBatchId === batchId) cancelBatchEdit();
+         }
     }
 
     function renderBatchesList(item) {
         const list = document.getElementById('exp-batches-list');
         list.innerHTML = '';
         
-        if (item.batches.length === 0) {
+        if (!item.batches || item.batches.length === 0) {
             list.innerHTML = '<div class="text-xs text-slate-400 text-center py-2">لا توجد دفعات مسجلة</div>';
             return;
         }
@@ -1083,9 +1269,12 @@
                     <div class="text-[10px] text-red-400">انتهاء: ${expiryDateStr}</div>
                     <div class="text-xs font-bold text-slate-700">الكمية: ${batch.qty}</div>
                 </div>
-                <div class="text-right">
+                <div class="text-right flex gap-2 items-center">
                     <span class="block text-[10px] px-2 py-0.5 rounded ${colorClass} mb-1">${label}</span>
-                    <button onclick="deleteBatch(${batch.id})" class="text-[10px] text-red-400 hover:text-red-600 underline">حذف</button>
+                    <div>
+                        <button onclick="editBatch(${batch.id})" class="text-[10px] text-blue-400 hover:text-blue-600 underline ml-2">تعديل</button>
+                        <button onclick="deleteBatch(${batch.id})" class="text-[10px] text-red-400 hover:text-red-600 underline">حذف</button>
+                    </div>
                 </div>
             `;
             list.appendChild(div);
@@ -1093,6 +1282,8 @@
     }
 
     function calcExpiry(roastDateStr, durationMonths = 12) {
+        if(!roastDateStr) return { remainingDays: 0, label: '-', colorClass: '', expiryDateStr: '-' };
+        
         const prodDate = new Date(roastDateStr);
         const expDate = new Date(prodDate);
         expDate.setMonth(expDate.getMonth() + durationMonths);
@@ -1131,7 +1322,8 @@
         inventory.forEach((item, idx) => {
             if (filter && !item.name.toLowerCase().includes(filter)) return;
             
-            if (item.batches.length === 0) {
+            // Fix: Always render the item even if no batches exist so it can be selected
+            if (!item.batches || item.batches.length === 0) {
                  const tr = document.createElement('tr');
                  tr.className = `hover:bg-amber-50 cursor-pointer transition ${idx === selectedItemIdx ? 'bg-amber-100' : ''}`;
                  tr.onclick = () => selectItem(idx, 'expiry');
@@ -1141,28 +1333,27 @@
                     <td class="p-3 text-center text-slate-300">-</td>
                     <td class="p-3 text-center text-slate-300">-</td>
                     <td class="p-3 text-center text-slate-300">0</td>
-                    <td class="p-3 text-center text-slate-300 text-[10px]">لا توجد تواريخ</td>
+                    <td class="p-3 text-center text-slate-300 text-[10px]">اضغط لإضافة تاريخ</td>
                 `;
                 tbody.appendChild(tr);
-                return;
+            } else {
+                item.batches.forEach((batch) => {
+                    const { label, colorClass, expiryDateStr } = calcExpiry(batch.date, batch.duration);
+                    const tr = document.createElement('tr');
+                    tr.className = `hover:bg-amber-50 cursor-pointer transition border-b border-slate-50 ${idx === selectedItemIdx ? 'bg-amber-100' : ''}`;
+                    tr.onclick = () => selectItem(idx, 'expiry');
+
+                    tr.innerHTML = `
+                        <td class="p-3 font-mono text-slate-500 text-xs">${item.code}</td>
+                        <td class="p-3 font-bold text-slate-700">${item.name}</td>
+                        <td class="p-3 text-center font-mono text-slate-600">${formatDateDisplay(batch.date)}</td>
+                        <td class="p-3 text-center font-mono text-red-600 font-bold">${expiryDateStr}</td>
+                        <td class="p-3 text-center font-bold text-slate-800">${batch.qty}</td>
+                        <td class="p-3 text-center"><span class="px-2 py-1 rounded text-[10px] ${colorClass}">${label}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
             }
-
-            item.batches.forEach((batch, batchIdx) => {
-                const { label, colorClass, expiryDateStr } = calcExpiry(batch.date, batch.duration);
-                const tr = document.createElement('tr');
-                tr.className = `hover:bg-amber-50 cursor-pointer transition border-b border-slate-50 ${idx === selectedItemIdx ? 'bg-amber-100' : ''}`;
-                tr.onclick = () => selectItem(idx, 'expiry');
-
-                tr.innerHTML = `
-                    <td class="p-3 font-mono text-slate-500 text-xs">${item.code}</td>
-                    <td class="p-3 font-bold text-slate-700">${item.name}</td>
-                    <td class="p-3 text-center font-mono text-slate-600">${formatDateDisplay(batch.date)}</td>
-                    <td class="p-3 text-center font-mono text-red-600 font-bold">${expiryDateStr}</td>
-                    <td class="p-3 text-center font-bold text-slate-800">${batch.qty}</td>
-                    <td class="p-3 text-center"><span class="px-2 py-1 rounded text-[10px] ${colorClass}">${label}</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
         });
     }
 
@@ -1186,7 +1377,7 @@
         tbody.innerHTML = '';
 
         inventory.forEach((item, idx) => {
-            const searchStr = (item.name + item.roastery + item.notes).toLowerCase();
+            const searchStr = (item.name + (item.roastery||'') + (item.notes||'')).toLowerCase();
             if (filter && !searchStr.includes(filter)) return;
 
             const tr = document.createElement('tr');
@@ -1242,7 +1433,7 @@
         let matches = inventory.map((item, idx) => ({ ...item, idx })).filter(item => {
             const basicMatch = item.name.toLowerCase().includes(query) || item.code.includes(query);
             if (context === 'notes') {
-                return basicMatch || item.notes.toLowerCase().includes(query) || item.roastery.toLowerCase().includes(query);
+                return basicMatch || (item.notes && item.notes.toLowerCase().includes(query)) || (item.roastery && item.roastery.toLowerCase().includes(query));
             }
             return basicMatch;
         });
@@ -1280,6 +1471,7 @@
             document.getElementById('exp-date').value = '';
             document.getElementById('exp-qty').value = '';
             document.getElementById('exp-duration').value = '12';
+            cancelBatchEdit();
             renderBatchesList(item);
         }
         else if (context === 'notes') {
@@ -1326,7 +1518,7 @@
     function exportGlobalData() {
         const data = [];
         inventory.forEach(item => {
-            if (item.batches.length > 0) {
+            if (item.batches && item.batches.length > 0) {
                 item.batches.forEach(b => {
                     const { expiryDateStr } = calcExpiry(b.date, b.duration);
                     data.push({
@@ -1395,7 +1587,7 @@
     function exportExpiryData() {
         const data = [];
         inventory.forEach(item => {
-            if (item.batches.length === 0) {
+            if (!item.batches || item.batches.length === 0) {
                  data.push({
                     'الكود': item.code,
                     'اسم الصنف': item.name,
