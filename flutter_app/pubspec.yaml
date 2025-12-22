@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   
   # State Management
   provider: ^6.1.1
@@ -33,13 +35,14 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   
-  # Add Cairo font for Arabic support
-  fonts:
-    - family: Cairo
-      fonts:
-        - asset: fonts/Cairo-Regular.ttf
-          weight: 400
-        - asset: fonts/Cairo-Bold.ttf
-          weight: 700
-        - asset: fonts/Cairo-Black.ttf
-          weight: 900
+  # Note: Cairo font files should be added to fonts/ directory
+  # and uncommented below for full Arabic support
+  # fonts:
+  #   - family: Cairo
+  #     fonts:
+  #       - asset: fonts/Cairo-Regular.ttf
+  #         weight: 400
+  #       - asset: fonts/Cairo-Bold.ttf
+  #         weight: 700
+  #       - asset: fonts/Cairo-Black.ttf
+  #         weight: 900
