@@ -2183,12 +2183,12 @@
             }
             
             // التحقق من طول البيانات
-            if (tracking.orderId.length < 2) {
+            if (tracking.orderId && tracking.orderId.length < 2) {
                 showToast('رقم الطلب قصير جداً', 'error');
                 return;
             }
             
-            if (tracking.shipmentNumber.length < 2) {
+            if (tracking.shipmentNumber && tracking.shipmentNumber.length < 2) {
                 showToast('رقم البوليصة قصير جداً', 'error');
                 return;
             }
