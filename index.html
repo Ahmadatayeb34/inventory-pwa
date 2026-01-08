@@ -97,19 +97,86 @@
         }
 
         @media print {
-            body { background: white; overflow: visible; height: auto; }
+            body { 
+                background: white !important; 
+                overflow: visible !important; 
+                height: auto !important; 
+            }
             header, aside, .no-print { display: none !important; }
-            #mainContainer { overflow: visible; position: static; }
+            #mainContainer { 
+                overflow: visible !important; 
+                position: static !important; 
+                height: auto !important;
+            }
             .print-section { display: block !important; page-break-after: always; }
-            table { width: 100%; border-collapse: collapse; font-size: 10pt; }
-            th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
-            thead { background: #eee !important; -webkit-print-color-adjust: exact; }
+            
+            /* إصلاح الجداول للطباعة */
+            .table-container {
+                overflow: visible !important;
+                max-height: none !important;
+                height: auto !important;
+            }
+            
+            table { 
+                width: 100% !important; 
+                border-collapse: collapse !important; 
+                font-size: 10pt !important;
+                page-break-inside: auto !important;
+            }
+            
+            thead { 
+                display: table-header-group !important;
+                background: #eee !important; 
+                -webkit-print-color-adjust: exact !important;
+                position: static !important;
+            }
+            
+            tbody { 
+                display: table-row-group !important;
+            }
+            
+            tr { 
+                page-break-inside: avoid !important; 
+                page-break-after: auto !important;
+            }
+            
+            th, td { 
+                border: 1px solid #ddd !important; 
+                padding: 4px !important; 
+                text-align: center !important; 
+            }
+            
             .bg-red-50 { background-color: #ffebee !important; -webkit-print-color-adjust: exact; }
             .bg-green-50 { background-color: #e8f5e9 !important; -webkit-print-color-adjust: exact; }
-            .print-footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 9pt; padding: 10px; border-top: 1px solid #ddd; }
+            .bg-amber-50 { background-color: #fff3e0 !important; -webkit-print-color-adjust: exact; }
+            .bg-blue-50 { background-color: #e3f2fd !important; -webkit-print-color-adjust: exact; }
+            
+            .print-footer { 
+                display: block !important;
+                position: fixed; 
+                bottom: 0; 
+                width: 100%; 
+                text-align: center; 
+                font-size: 9pt; 
+                padding: 10px; 
+                border-top: 1px solid #ddd; 
+            }
             
             /* تأكيد التفاف النص في الطباعة */
             .wrap-text { white-space: normal !important; }
+            
+            /* إزالة القيود على الارتفاع */
+            main, .flex-1 {
+                overflow: visible !important;
+                max-height: none !important;
+                height: auto !important;
+            }
+            
+            /* التأكد من ظهور جميع الصفوف */
+            .bg-white, .rounded-2xl {
+                overflow: visible !important;
+                max-height: none !important;
+            }
         }
     </style>
 </head>
@@ -602,10 +669,16 @@
                     <h2 class="text-2xl sm:text-3xl font-black text-brand-900">تتبع بوليصات الشحن</h2>
                     <p class="text-sm text-slate-500 mt-1">إدارة ومتابعة شحنات الطلبات</p>
                 </div>
-                <button onclick="exportTrackingExcel()" class="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg btn-pulse flex items-center gap-2">
-                    <i class="fa-solid fa-file-excel"></i>
-                    <span>تصدير Excel</span>
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="exportTrackingExcel()" class="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg btn-pulse flex items-center gap-2">
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>تصدير Excel</span>
+                    </button>
+                    <button onclick="clearTrackingData()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg btn-pulse flex items-center gap-2">
+                        <i class="fa-solid fa-trash-alt"></i>
+                        <span>حذف الكل</span>
+                    </button>
+                </div>
             </div>
 
             <div class="glass-panel p-4 sm:p-6 rounded-2xl shadow-lg mb-6">
@@ -725,6 +798,7 @@
 <script>
     const STORAGE_KEY_INV = 'ims_inventory_data_v2';
     const STORAGE_KEY_ORDERS = 'ims_orders_data_v2';
+    const STORAGE_KEY_TRK = 'ims_tracking_data_v1';
     
     let inventory = [];
     let ordersData = { showroom: [], cafe: [] };
@@ -808,12 +882,16 @@
 
     function switchView(viewName) {
         currentView = viewName;
-        ['view-home', 'view-inventory', 'view-expiry', 'view-notes', 'view-orders'].forEach(id => {
-            document.getElementById(id).classList.add('hidden');
+        ['view-home', 'view-inventory', 'view-expiry', 'view-notes', 'view-orders', 'view-tracking'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
         });
         
-        document.getElementById(`view-${viewName}`).classList.remove('hidden');
-        document.getElementById(`view-${viewName}`).classList.add('fade-in');
+        const targetView = document.getElementById(`view-${viewName}`);
+        if (targetView) {
+            targetView.classList.remove('hidden');
+            targetView.classList.add('fade-in');
+        }
 
         selectedItemIdx = -1;
         
@@ -830,6 +908,8 @@
         } else if (viewName === 'orders') {
             switchOrdersTab(activeOrdersTab);
             setOrderSource(activeOrderSource);
+        } else if (viewName === 'tracking') {
+            renderTrackingTable();
         } else if (viewName === 'home') {
             updateDashboardStats();
         }
@@ -887,11 +967,14 @@
     }
 
     function clearAllData() {
-        if (confirm('هل أنت متأكد تماماً من حذف جميع بيانات التطبيق بالكامل (الجرد والطلبات والملاحظات)؟ لا يمكن التراجع عن هذا الإجراء!')) {
-            localStorage.removeItem(STORAGE_KEY_INV);
-            localStorage.removeItem(STORAGE_KEY_ORDERS);
-            showToast('تم حذف جميع بيانات التطبيق بنجاح', 'error');
-            setTimeout(() => location.reload(), 500); 
+        if (confirm('⚠️⚠️⚠️ تحذير خطير ⚠️⚠️⚠️\n\nهل أنت متأكد تماماً من حذف جميع بيانات التطبيق بالكامل؟\n\nسيتم حذف:\n• جميع أصناف الجرد والكميات\n• جميع الطلبات\n• جميع تواريخ الصلاحية\n• جميع الملاحظات والإيحاءات\n• جميع بيانات التتبع\n\n⚠️ لا يمكن التراجع عن هذا الإجراء نهائياً!\n\nاضغط OK للمتابعة أو Cancel للإلغاء')) {
+            if (confirm('⚠️ تأكيد نهائي\n\nهذا هو التأكيد الأخير!\n\nهل أنت متأكد 100% من حذف جميع البيانات؟')) {
+                localStorage.removeItem(STORAGE_KEY_INV);
+                localStorage.removeItem(STORAGE_KEY_ORDERS);
+                localStorage.removeItem(STORAGE_KEY_TRK);
+                showToast('تم حذف جميع بيانات التطبيق بنجاح', 'error');
+                setTimeout(() => location.reload(), 1000); 
+            }
         }
     }
 
@@ -1110,7 +1193,10 @@
     }
 
     function deleteOrder(id) {
-        if(confirm('هل أنت متأكد من حذف هذا الطلب نهائياً؟')) {
+        const order = ordersData[activeOrdersTab].find(o => o.id === id);
+        if(!order) return;
+        
+        if(confirm(`⚠️ حذف الطلب\n\nهل أنت متأكد من حذف هذا الطلب نهائياً؟\n\nرقم الطلب: ${order.number}\nالشركة: ${order.company}\n\nلا يمكن التراجع عن هذا الإجراء!`)) {
             ordersData[activeOrdersTab] = ordersData[activeOrdersTab].filter(o => o.id !== id);
             saveAllData();
             renderOrdersTable();
@@ -1211,7 +1297,16 @@
         if (selectedItemIdx === -1) return;
         const inputField = document.getElementById('inv-input-qty');
         const qtyVal = Number(inputField.value);
-        if (!qtyVal && qtyVal !== 0) return;
+        if (!qtyVal && qtyVal !== 0) {
+            showToast('يرجى إدخال قيمة صحيحة', 'error');
+            return;
+        }
+        
+        // التحقق من الكميات (عدم السماح بقيم سالبة)
+        if (qtyVal < 0) {
+            showToast('لا يمكن إدخال كمية سالبة', 'error');
+            return;
+        }
 
         if (invMode === 'add') {
             inventory[selectedItemIdx].actualQty += qtyVal;
@@ -1232,7 +1327,10 @@
     function deleteCurrentItem() {
         if (selectedItemIdx === -1) return;
         
-        if (confirm(`هل أنت متأكد من حذف الصنف "${inventory[selectedItemIdx].name}" نهائياً من النظام؟`)) {
+        const itemName = inventory[selectedItemIdx].name;
+        const itemCode = inventory[selectedItemIdx].code;
+        
+        if (confirm(`⚠️ تحذير: حذف الصنف\n\nهل أنت متأكد من حذف الصنف التالي نهائياً من النظام؟\n\nالاسم: ${itemName}\nالكود: ${itemCode}\n\n⚠️ سيتم حذف جميع البيانات المرتبطة بهذا الصنف (الكميات، التواريخ، الملاحظات)\n\nلا يمكن التراجع عن هذا الإجراء!`)) {
             inventory.splice(selectedItemIdx, 1);
             saveAllData();
             resetInvUI();
@@ -1306,6 +1404,28 @@
             showToast('يرجى إدخال التاريخ والكمية', 'error');
             return;
         }
+        
+        // التحقق من صحة التاريخ (عدم السماح بتواريخ مستقبلية للتحميص)
+        const selectedDate = new Date(dateStr);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        selectedDate.setHours(0, 0, 0, 0);
+        
+        if (selectedDate > today) {
+            showToast('لا يمكن إدخال تاريخ تحميص مستقبلي', 'error');
+            return;
+        }
+        
+        // التحقق من الكميات (عدم السماح بقيم سالبة أو صفر)
+        if (qty <= 0) {
+            showToast('يجب أن تكون الكمية أكبر من صفر', 'error');
+            return;
+        }
+        
+        if (duration <= 0) {
+            showToast('يجب أن تكون مدة الصلاحية أكبر من صفر', 'error');
+            return;
+        }
 
         if (editingBatchId) {
              const batchIndex = inventory[selectedItemIdx].batches.findIndex(b => b.id === editingBatchId);
@@ -1357,7 +1477,10 @@
 
     function deleteBatch(batchId) {
          if (selectedItemIdx === -1) return;
-         if(confirm('حذف هذا التاريخ؟')) {
+         const batch = inventory[selectedItemIdx].batches.find(b => b.id === batchId);
+         if (!batch) return;
+         
+         if(confirm(`⚠️ حذف الدفعة\n\nهل أنت متأكد من حذف هذه الدفعة؟\n\nتاريخ التحميص: ${formatDateDisplay(batch.date)}\nالكمية: ${batch.qty}\n\nلا يمكن التراجع عن هذا الإجراء!`)) {
             inventory[selectedItemIdx].batches = inventory[selectedItemIdx].batches.filter(b => b.id !== batchId);
             saveAllData();
             renderBatchesList(inventory[selectedItemIdx]);
@@ -1641,8 +1764,8 @@
                     data.push({
                         'الكود': item.code,
                         'الصنف': item.name,
-                        'المحمصة': item.roastery,
-                        'الملاحظات': item.notes,
+                        'المحمصة': item.roastery || '-',
+                        'الملاحظات': item.notes || '-',
                         'الكمية بالنظام': item.sysQty,
                         'الكمية الفعلية': item.actualQty,
                         'الفارق': item.actualQty - item.sysQty,
@@ -1655,8 +1778,8 @@
                 data.push({
                     'الكود': item.code,
                     'الصنف': item.name,
-                    'المحمصة': item.roastery,
-                    'الملاحظات': item.notes,
+                    'المحمصة': item.roastery || '-',
+                    'الملاحظات': item.notes || '-',
                     'الكمية بالنظام': item.sysQty,
                     'الكمية الفعلية': item.actualQty,
                     'الفارق': item.actualQty - item.sysQty,
@@ -1666,7 +1789,49 @@
                 });
             }
         });
-        downloadExcel(data, "التقرير_الشامل_المفصل");
+        
+        // إضافة بيانات التتبع في ورقة منفصلة
+        const wb = XLSX.utils.book_new();
+        const ws1 = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws1, 'الجرد والصلاحية');
+        
+        // إضافة ورقة الطلبات
+        const ordersExport = [];
+        ['showroom', 'cafe'].forEach(source => {
+            ordersData[source].forEach(order => {
+                ordersExport.push({
+                    'المصدر': source === 'showroom' ? 'المعرض' : 'الكافيه',
+                    'رقم الطلب': order.number,
+                    'الشركة': order.company,
+                    'نوع الطلب': order.type,
+                    'التاريخ': formatDateDisplay(order.date),
+                    'الحالة': order.status === 'completed' ? 'مكتمل' : 'قيد الانتظار',
+                    'ملاحظات': order.notes || '-'
+                });
+            });
+        });
+        
+        if (ordersExport.length > 0) {
+            const ws2 = XLSX.utils.json_to_sheet(ordersExport);
+            XLSX.utils.book_append_sheet(wb, ws2, 'الطلبات');
+        }
+        
+        // إضافة ورقة التتبع
+        if (trackingData && trackingData.length > 0) {
+            const trackingExport = trackingData.map(item => ({
+                'رقم الطلب': item.orderId,
+                'رقم البوليصة': item.shipmentNumber,
+                'حالة التتبع': item.status,
+                'تم الاستلام': item.delivered ? 'نعم' : 'لا',
+                'ملاحظات': item.notes || '-',
+                'آخر تحديث': new Date(item.lastUpdate).toLocaleString('ar-SA')
+            }));
+            const ws3 = XLSX.utils.json_to_sheet(trackingExport);
+            XLSX.utils.book_append_sheet(wb, ws3, 'تتبع الشحنات');
+        }
+        
+        XLSX.writeFile(wb, `التقرير_الشامل_${new Date().toISOString().split('T')[0]}.xlsx`);
+        showToast('تم تصدير التقرير الشامل بنجاح');
     }
 
     function handleInventoryImport(evt) {
@@ -1807,7 +1972,6 @@
 
 
     // ======== TRACKING SECTION ========
-    const STORAGE_KEY_TRK = 'ims_tracking_data_v1';
     let trackingData = [];
     let currentTrackingFilter = 'all';
 
@@ -1954,7 +2118,10 @@
     }
 
     function deleteTracking(idx) {
-        if (confirm('هل أنت متأكد من حذف هذه الشحنة؟')) {
+        const tracking = trackingData[idx];
+        if (!tracking) return;
+        
+        if (confirm(`⚠️ حذف الشحنة\n\nهل أنت متأكد من حذف هذه الشحنة؟\n\nرقم الطلب: ${tracking.orderId}\nرقم البوليصة: ${tracking.shipmentNumber}\n\nلا يمكن التراجع عن هذا الإجراء!`)) {
             trackingData.splice(idx, 1);
             saveTracking();
             renderTrackingTable();
@@ -1964,7 +2131,7 @@
 
     function exportTrackingExcel() {
         if (trackingData.length === 0) {
-            showToast('لا توجد بيانات للتصدير');
+            showToast('لا توجد بيانات للتصدير', 'error');
             return;
         }
 
@@ -1983,6 +2150,18 @@
         XLSX.writeFile(wb, `tracking_${new Date().toISOString().split('T')[0]}.xlsx`);
         showToast('تم تصدير البيانات بنجاح');
     }
+    
+    function clearTrackingData() {
+        if (confirm('⚠️ حذف جميع بيانات التتبع\n\nهل أنت متأكد من حذف جميع بيانات التتبع؟\n\nسيتم حذف:\n• جميع الشحنات المسجلة\n• جميع حالات التتبع\n\nلا يمكن التراجع عن هذا الإجراء!')) {
+            if (confirm('⚠️ تأكيد نهائي\n\nهذا هو التأكيد الأخير لحذف جميع بيانات التتبع!\n\nهل أنت متأكد من المتابعة؟')) {
+                trackingData = [];
+                saveTracking();
+                renderTrackingTable();
+                updateDashboardStats();
+                showToast('تم حذف جميع بيانات التتبع', 'error');
+            }
+        }
+    }
 
     const trackingFormEl = document.getElementById('trackingForm');
     if (trackingFormEl) {
@@ -1999,7 +2178,18 @@
             };
 
             if (!tracking.orderId || !tracking.shipmentNumber) {
-                showToast('يرجى إدخال رقم الطلب ورقم البوليصة');
+                showToast('يرجى إدخال رقم الطلب ورقم البوليصة', 'error');
+                return;
+            }
+            
+            // التحقق من طول البيانات
+            if (tracking.orderId && tracking.orderId.length < 2) {
+                showToast('رقم الطلب قصير جداً', 'error');
+                return;
+            }
+            
+            if (tracking.shipmentNumber && tracking.shipmentNumber.length < 2) {
+                showToast('رقم البوليصة قصير جداً', 'error');
                 return;
             }
 
