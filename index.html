@@ -798,6 +798,7 @@
 <script>
     const STORAGE_KEY_INV = 'ims_inventory_data_v2';
     const STORAGE_KEY_ORDERS = 'ims_orders_data_v2';
+    const STORAGE_KEY_TRK = 'ims_tracking_data_v1';
     
     let inventory = [];
     let ordersData = { showroom: [], cafe: [] };
@@ -1971,7 +1972,6 @@
 
 
     // ======== TRACKING SECTION ========
-    const STORAGE_KEY_TRK = 'ims_tracking_data_v1';
     let trackingData = [];
     let currentTrackingFilter = 'all';
 
@@ -2152,12 +2152,14 @@
     }
     
     function clearTrackingData() {
-        if (confirm('هل أنت متأكد من حذف جميع بيانات التتبع؟ لا يمكن التراجع عن هذا الإجراء!')) {
-            trackingData = [];
-            saveTracking();
-            renderTrackingTable();
-            updateDashboardStats();
-            showToast('تم حذف جميع بيانات التتبع', 'error');
+        if (confirm('⚠️ حذف جميع بيانات التتبع\n\nهل أنت متأكد من حذف جميع بيانات التتبع؟\n\nسيتم حذف:\n• جميع الشحنات المسجلة\n• جميع حالات التتبع\n\nلا يمكن التراجع عن هذا الإجراء!')) {
+            if (confirm('⚠️ تأكيد نهائي\n\nهذا هو التأكيد الأخير لحذف جميع بيانات التتبع!\n\nهل أنت متأكد من المتابعة؟')) {
+                trackingData = [];
+                saveTracking();
+                renderTrackingTable();
+                updateDashboardStats();
+                showToast('تم حذف جميع بيانات التتبع', 'error');
+            }
         }
     }
 
