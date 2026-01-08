@@ -148,8 +148,8 @@
     <!-- VIEW: HOME (DASHBOARD) -->
     <div id="view-home" class="absolute inset-0 flex flex-col items-center justify-center p-6 fade-in z-30 bg-slate-50 overflow-y-auto">
         <div class="text-center mb-10">
-            <h2 class="text-3xl sm:text-4xl font-black text-brand-900 mb-2">لوحة القيادة والمتابعة</h2>
-            <p class="text-slate-500 font-medium">نظرة عامة على حالة العمل</p>
+            <h2 class="text-3xl sm:text-4xl font-black text-brand-900 mb-2" data-i18n="dashboard.title">لوحة القيادة والمتابعة</h2>
+            <p class="text-slate-500 font-medium" data-i18n="dashboard.subtitle">نظرة عامة على حالة العمل</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 w-full max-w-7xl">
@@ -160,8 +160,8 @@
                     </div>
                     <span id="dash-inv-count" class="text-3xl font-black text-slate-800">0</span>
                 </div>
-                <h3 class="text-lg font-bold text-slate-700">الجرد العام</h3>
-                <p class="text-xs text-slate-400 mt-1">إدارة الكميات وحذف الأصناف</p>
+                <h3 class="text-lg font-bold text-slate-700" data-i18n="card.inventory">الجرد العام</h3>
+                <p class="text-xs text-slate-400 mt-1" data-i18n="card.inventory.desc">إدارة الكميات وحذف الأصناف</p>
             </div>
 
             <div onclick="switchView('expiry')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-accent-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
@@ -171,8 +171,8 @@
                     </div>
                     <span id="dash-exp-count" class="text-3xl font-black text-amber-600">0</span>
                 </div>
-                <h3 class="text-lg font-bold text-slate-700">تنبيهات الصلاحية</h3>
-                <p class="text-xs text-slate-400 mt-1">متابعة التواريخ والدفعات</p>
+                <h3 class="text-lg font-bold text-slate-700" data-i18n="card.expiry">تنبيهات الصلاحية</h3>
+                <p class="text-xs text-slate-400 mt-1" data-i18n="card.expiry.desc">متابعة التواريخ والدفعات</p>
             </div>
 
             <div onclick="switchView('notes')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-emerald-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
@@ -182,8 +182,8 @@
                     </div>
                     <span id="dash-notes-count" class="text-3xl font-black text-slate-800">0</span>
                 </div>
-                <h3 class="text-lg font-bold text-slate-700">دليل القهوة</h3>
-                <p class="text-xs text-slate-400 mt-1">الوصفات والإيحاءات</p>
+                <h3 class="text-lg font-bold text-slate-700" data-i18n="card.notes">دليل القهوة</h3>
+                <p class="text-xs text-slate-400 mt-1" data-i18n="card.notes.desc">الوصفات والإيحاءات</p>
             </div>
 
             <div onclick="switchView('orders')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-purple-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
@@ -193,20 +193,20 @@
                     </div>
                     <span id="dash-orders-count" class="text-3xl font-black text-purple-600">0</span>
                 </div>
-                <h3 class="text-lg font-bold text-slate-700">طلبات قيد الانتظار</h3>
-                <p class="text-xs text-slate-400 mt-1">تشمل المعرض والكافيه</p>
+                <h3 class="text-lg font-bold text-slate-700" data-i18n="card.orders">طلبات قيد الانتظار</h3>
+                <p class="text-xs text-slate-400 mt-1" data-i18n="card.orders.desc">تشمل المعرض والكافيه</p>
             </div>
         </div>
         
         <div class="mt-12 w-full max-w-5xl flex flex-col items-center">
             <div class="flex gap-4 mb-4">
                  <button onclick="document.getElementById('fileInputGlobal').click()" class="px-6 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition flex items-center gap-2 shadow-lg shadow-brand-500/30 btn-pulse">
-                    <i class="fa-solid fa-file-import"></i> استيراد (الجرد فقط)
+                    <i class="fa-solid fa-file-import"></i> <span data-i18n="btn.import">استيراد (الجرد فقط)</span>
                 </button>
                 <input type="file" id="fileInputGlobal" class="hidden" accept=".xlsx,.xls" onchange="handleGlobalImport(event)">
                 
                 <button onclick="exportGlobalData()" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition flex items-center gap-2 shadow-lg shadow-slate-500/30 btn-pulse">
-                    <i class="fa-solid fa-file-export"></i> تصدير (التقرير الشامل)
+                    <i class="fa-solid fa-file-export"></i> <span data-i18n="btn.export">تصدير (التقرير الشامل)</span>
                 </button>
             </div>
 
@@ -217,13 +217,13 @@
                     </div>
                     <span id="dash-track-count" class="text-3xl font-black text-slate-800">0</span>
                 </div>
-                <h3 class="text-lg font-bold text-slate-700">تتبع الشحنات</h3>
-                <p class="text-xs text-slate-400 mt-1">بوليصات الشحن والطلبات</p>
+                <h3 class="text-lg font-bold text-slate-700" data-i18n="card.tracking">تتبع الشحنات</h3>
+                <p class="text-xs text-slate-400 mt-1" data-i18n="card.tracking.desc">بوليصات الشحن والطلبات</p>
             </div>
         </div>
              <div class="mt-12 w-full max-w-5xl flex flex-col items-center">
             <button onclick="clearAllData()" class="px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition flex items-center gap-2 shadow-lg shadow-red-500/30 btn-pulse mt-8">
-                <i class="fa-solid fa-skull-crossbones"></i> حذف جميع بيانات التطبيق
+                <i class="fa-solid fa-skull-crossbones"></i> <span data-i18n="btn.clearAll">حذف جميع بيانات التطبيق</span>
             </button>
         </div>
     </div>
@@ -233,62 +233,62 @@
         <aside class="w-full lg:w-[380px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl overflow-y-auto no-print">
             <div class="p-5 bg-purple-50 border-b border-purple-100">
                 <h3 class="text-lg font-black text-purple-900 flex items-center gap-2">
-                    <i class="fa-solid fa-cart-plus"></i> <span id="order-form-title">إضافة طلب جديد</span>
+                    <i class="fa-solid fa-cart-plus"></i> <span id="order-form-title" data-i18n="orders.addTitle">إضافة طلب جديد</span>
                 </h3>
             </div>
 
             <div class="p-5 flex flex-col gap-4">
                 <div class="bg-slate-100 p-1 rounded-xl flex">
                     <button onclick="setOrderSource('showroom')" id="btn-src-showroom" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all shadow-sm bg-white text-showroom-600">
-                        <i class="fa-solid fa-store"></i> المعرض
+                        <i class="fa-solid fa-store"></i> <span data-i18n="orders.showroom">المعرض</span>
                     </button>
                     <button onclick="setOrderSource('cafe')" id="btn-src-cafe" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all text-slate-500 hover:text-cafe-600">
-                        <i class="fa-solid fa-mug-saucer"></i> الكافيه
+                        <i class="fa-solid fa-mug-saucer"></i> <span data-i18n="orders.cafe">الكافيه</span>
                     </button>
                 </div>
 
                 <div>
-                    <label class="text-[11px] font-bold text-slate-500 mb-1 block">رقم الطلب</label>
-                    <input id="ord-num" type="text" placeholder="مثلاً: PO-2024-001" class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none">
+                    <label class="text-[11px] font-bold text-slate-500 mb-1 block" data-i18n="orders.number">رقم الطلب</label>
+                    <input id="ord-num" type="text" placeholder="مثلاً: PO-2024-001" data-i18n-placeholder="orders.number.placeholder" class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none">
                 </div>
 
                 <div>
-                    <label class="text-[11px] font-bold text-slate-500 mb-1 block">اسم المحمصة أو الشركة</label>
-                    <input id="ord-company" type="text" placeholder="اسم المورد..." class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none">
+                    <label class="text-[11px] font-bold text-slate-500 mb-1 block" data-i18n="orders.company">اسم المحمصة أو الشركة</label>
+                    <input id="ord-company" type="text" placeholder="اسم المورد..." data-i18n-placeholder="orders.company.placeholder" class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none">
                 </div>
 
                 <div>
-                    <label class="text-[11px] font-bold text-slate-500 mb-1 block">نوع الطلب</label>
+                    <label class="text-[11px] font-bold text-slate-500 mb-1 block" data-i18n="orders.type">نوع الطلب</label>
                     <select id="ord-type" class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none bg-white">
-                        <option value="أمر شراء">أمر شراء</option>
-                        <option value="طلب مواد">طلب مواد</option>
-                        <option value="طلب تحويل بين الفروع">طلب تحويل بين الفروع</option>
-                        <option value="مستودع بضاعة في الطريق">مستودع بضاعة في الطريق</option>
+                        <option value="أمر شراء" data-i18n-option="orders.type.purchase">أمر شراء</option>
+                        <option value="طلب مواد" data-i18n-option="orders.type.materials">طلب مواد</option>
+                        <option value="طلب تحويل بين الفروع" data-i18n-option="orders.type.transfer">طلب تحويل بين الفروع</option>
+                        <option value="مستودع بضاعة في الطريق" data-i18n-option="orders.type.warehouse">مستودع بضاعة في الطريق</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="text-[11px] font-bold text-slate-500 mb-1 block">تاريخ الطلب</label>
+                    <label class="text-[11px] font-bold text-slate-500 mb-1 block" data-i18n="orders.date">تاريخ الطلب</label>
                     <input id="ord-date" type="date" class="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:border-purple-500 outline-none">
                 </div>
                 
                 <div>
-                    <label class="text-[11px] font-bold text-slate-500 mb-1 block">ملاحظات إضافية</label>
-                    <textarea id="ord-notes" placeholder="أي تفاصيل إضافية..." class="w-full h-16 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-purple-500 outline-none resize-none"></textarea>
+                    <label class="text-[11px] font-bold text-slate-500 mb-1 block" data-i18n="orders.notes">ملاحظات إضافية</label>
+                    <textarea id="ord-notes" placeholder="أي تفاصيل إضافية..." data-i18n-placeholder="orders.notes.placeholder" class="w-full h-16 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-purple-500 outline-none resize-none"></textarea>
                 </div>
 
                 <input type="hidden" id="ord-edit-id" value="">
                 
                 <button onclick="saveOrder()" class="w-full h-12 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-lg shadow-purple-600/20 transition btn-pulse mt-2">
-                    <i class="fa-solid fa-save"></i> <span id="order-save-btn-text">تسجيل الطلب</span>
+                    <i class="fa-solid fa-save"></i> <span id="order-save-btn-text" data-i18n="orders.save">تسجيل الطلب</span>
                 </button>
                 
                 <button onclick="cancelOrderEdit()" id="cancel-edit-btn" class="hidden w-full h-10 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition">
-                    <i class="fa-solid fa-times"></i> إلغاء التعديل
+                    <i class="fa-solid fa-times"></i> <span data-i18n="orders.cancelEdit">إلغاء التعديل</span>
                 </button>
                 
                 <button onclick="clearPageData('orders')" class="w-full h-10 bg-red-100 hover:bg-red-200 text-red-600 rounded-xl font-bold transition btn-pulse mt-4">
-                    <i class="fa-solid fa-trash-alt"></i> حذف بيانات الطلبات
+                    <i class="fa-solid fa-trash-alt"></i> <span data-i18n="orders.clearData">حذف بيانات الطلبات</span>
                 </button>
             </div>
         </aside>
@@ -1497,8 +1497,8 @@
         document.getElementById('ord-notes').value = order.notes || '';
         document.getElementById('ord-edit-id').value = order.id;
         
-        document.getElementById('order-form-title').innerText = 'تعديل الطلب';
-        document.getElementById('order-save-btn-text').innerText = 'حفظ التعديلات';
+        document.getElementById('order-form-title').innerText = t('orders.editTitle');
+        document.getElementById('order-save-btn-text').innerText = t('orders.update');
         document.getElementById('cancel-edit-btn').classList.remove('hidden');
         
         document.getElementById('ord-num').focus();
@@ -1512,8 +1512,8 @@
         document.getElementById('ord-notes').value = '';
         document.getElementById('ord-edit-id').value = '';
         
-        document.getElementById('order-form-title').innerText = 'إضافة طلب جديد';
-        document.getElementById('order-save-btn-text').innerText = 'تسجيل الطلب';
+        document.getElementById('order-form-title').innerText = t('orders.addTitle');
+        document.getElementById('order-save-btn-text').innerText = t('orders.save');
         document.getElementById('cancel-edit-btn').classList.add('hidden');
     }
 
@@ -1578,7 +1578,7 @@
                 <td class="p-3 text-xs text-slate-500 wrap-text max-w-[150px]">${order.notes || '-'}</td>
                 <td class="p-3 text-center text-slate-500 text-xs font-mono">${formatDateDisplay(order.date)}</td>
                 <td class="p-3 text-center ${daysClass}">
-                   ${daysDiff} يوم ${warningIcon}
+                   ${daysDiff} ${t('orders.days')} ${warningIcon}
                 </td>
                 <td class="p-3 text-center no-print">
                     <button onclick="editOrder(${order.id})" class="text-blue-500 hover:text-blue-700 transition px-2 ml-1">
@@ -1656,7 +1656,7 @@
             if (query.length > 1) {
                 const li = document.createElement('li');
                 li.className = 'p-3 bg-brand-50 hover:bg-brand-100 cursor-pointer text-brand-700 font-bold text-xs text-center';
-                li.innerHTML = `<i class="fa-solid fa-plus"></i> إضافة صنف جديد: ${query}`;
+                li.innerHTML = `<i class="fa-solid fa-plus"></i> ${t('addItem.new', query)}`;
                 li.onclick = () => openAddItemModal(query);
                 list.appendChild(li);
                 list.classList.remove('hidden');
@@ -1834,7 +1834,7 @@
             document.getElementById('exp-duration').value = batch.duration;
             
             editingBatchId = batchId;
-            document.getElementById('btn-add-batch').innerHTML = '<i class="fa-solid fa-save"></i> حفظ التعديل';
+            document.getElementById('btn-add-batch').innerHTML = '<i class="fa-solid fa-save"></i> ' + t('exp.updateBatch');
             document.getElementById('btn-cancel-batch').classList.remove('hidden');
         }
     }
@@ -1844,7 +1844,7 @@
         document.getElementById('exp-qty').value = '';
         document.getElementById('exp-date').value = '';
         document.getElementById('exp-duration').value = '12';
-        document.getElementById('btn-add-batch').innerHTML = '<i class="fa-solid fa-plus"></i> إضافة التاريخ';
+        document.getElementById('btn-add-batch').innerHTML = '<i class="fa-solid fa-plus"></i> ' + t('exp.addBatch');
         document.getElementById('btn-cancel-batch').classList.add('hidden');
     }
 
@@ -2427,7 +2427,7 @@
             form.reset();
             delete form.dataset.editIdx;
             const submitText = document.getElementById('tracking-submit-text');
-            if (submitText) submitText.textContent = 'إضافة شحنة';
+            if (submitText) submitText.textContent = t('track.add');
         }
     }
 
@@ -2441,7 +2441,7 @@
         document.getElementById('track-notes').value = item.notes || '';
         document.getElementById('track-delivered').checked = item.delivered;
         document.getElementById('trackingForm').dataset.editIdx = idx;
-        document.getElementById('tracking-submit-text').textContent = 'تحديث الشحنة';
+        document.getElementById('tracking-submit-text').textContent = t('track.update');
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
