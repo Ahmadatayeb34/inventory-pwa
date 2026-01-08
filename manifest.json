@@ -1,11 +1,14 @@
 {
-  "name": "نظام الإدارة المتكامل تطوير أحمد الطيب",
-  "short_name": "إدارة المخزون",
+  "name": "Integrated Management System - Ahmad Altayeb / نظام الإدارة المتكامل - أحمد الطيب",
+  "short_name": "IMS / إدارة المخزون",
+  "description": "Professional Integrated Management System for inventory, orders, expiry tracking, and shipment management / نظام الإدارة المتكامل الاحترافي للمخزون والطلبات وتتبع الصلاحية والشحنات",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#1e1b4b",
   "theme_color": "#1e1b4b",
   "orientation": "portrait",
+  "lang": "ar",
+  "dir": "rtl",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/924/924514.png",
