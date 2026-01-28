@@ -101,6 +101,19 @@
             header, aside, .no-print { display: none !important; }
             #mainContainer { overflow: visible; position: static; }
             .print-section { display: block !important; page-break-after: always; }
+              .table-container{
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+  table{
+    page-break-inside: auto;
+  }
+
+  thead{ display: table-header-group; }
+  tr{ page-break-inside: avoid; }
+}
+
             table { width: 100%; border-collapse: collapse; font-size: 10pt; }
             th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
             thead { background: #eee !important; -webkit-print-color-adjust: exact; }
