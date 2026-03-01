@@ -96,33 +96,107 @@
             overflow-wrap: break-word;
         }
 
-        @media print {
-            body { background: white; overflow: visible; height: auto; }
-            header, aside, .no-print { display: none !important; }
-            #mainContainer { overflow: visible; position: static; }
-            .print-section { display: block !important; page-break-after: always; }
-              .table-container{
-    overflow: visible !important;
-    max-height: none !important;
-    height: auto !important;
-  }
-  table{
-    page-break-inside: auto;
-  }
-
-  thead{ display: table-header-group; }
-  tr{ page-break-inside: avoid; }
+                @media print {
+            @media print {
+    /* إزالة overflow من جميع العناصر الأب */
+    body { 
+        background: white; 
+        overflow: visible !important; 
+        height: auto !important; 
+    }
+    
+    header, aside, .no-print { 
+        display: none !important; 
+    }
+    
+    #mainContainer { 
+        overflow: visible !important; 
+        position: static !important;
+        height: auto !important;
+    }
+    
+    /* 🔥 إصلاح main */
+    main { 
+        overflow: visible !important !important;
+        flex: none !important;
+        height: auto !important;
+    }
+    
+    /* 🔥 إصلاح div الأبيض الكبير */
+    .bg-white.rounded-2xl {
+        overflow: visible !important;
+        flex: none !important;
+        height: auto !important;
+    }
+    
+    /* 🔥 إصلاح table-container (الأساسي) */
+    .table-container {
+        overflow: visible !important;
+        max-height: none !important;
+        height: auto !important;
+        border-radius: 0 !important;
+    }
+    
+    /* تنسيق الجداول */
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        font-size: 10pt; 
+    }
+    
+    th, td { 
+        border: 1px solid #ddd; 
+        padding: 4px; 
+        text-align: center; 
+    }
+    
+    thead { 
+        background: #eee !important; 
+        -webkit-print-color-adjust: exact; 
+    }
+    
+    /* 🔥 أهم شيء: thead يجب أن يبقى sticky في الطباعة */
+    thead th {
+        position: static !important;
+        top: auto !important;
+    }
+    
+    .bg-red-50 { 
+        background-color: #ffebee !important; 
+        -webkit-print-color-adjust: exact; 
+    }
+    
+    .bg-green-50 { 
+        background-color: #e8f5e9 !important; 
+        -webkit-print-color-adjust: exact; 
+    }
+    
+    .print-footer { 
+        position: fixed; 
+        bottom: 0; 
+        width: 100%; 
+        text-align: center; 
+        font-size: 9pt; 
+        padding: 10px; 
+        border-top: 1px solid #ddd; 
+    }
+    
+    .wrap-text { 
+        white-space: normal !important; 
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+    }
 }
-
-            table { width: 100%; border-collapse: collapse; font-size: 10pt; }
-            th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
-            thead { background: #eee !important; -webkit-print-color-adjust: exact; }
-            .bg-red-50 { background-color: #ffebee !important; -webkit-print-color-adjust: exact; }
-            .bg-green-50 { background-color: #e8f5e9 !important; -webkit-print-color-adjust: exact; }
-            .print-footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 9pt; padding: 10px; border-top: 1px solid #ddd; }
-            
             /* تأكيد التفاف النص في الطباعة */
             .wrap-text { white-space: normal !important; }
+            
+            /* ✅ إصلاح مشكلة الطباعة - إظهار جميع الطلبات في الجدول دون scroll */
+            .table-container {
+                overflow: visible !important;
+                max-height: none !important;
+                height: auto !important;
+                border-radius: 0 !important;
+            }
         }
     </style>
 </head>
@@ -142,9 +216,6 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <button onclick="toggleLanguage()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-amber-900/50 btn-pulse" title="تغيير اللغة">
-                <i class="fa-solid fa-globe"></i> <span class="hidden sm:inline" id="lang-text">English</span>
-            </button>
             <button onclick="saveAllDataManual()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-brand-900/50 btn-pulse">
                 <i class="fa-solid fa-save"></i> <span class="hidden sm:inline">حفظ التغييرات</span>
             </button>
@@ -627,44 +698,43 @@
             <div class="glass-panel p-4 sm:p-6 rounded-2xl shadow-lg mb-6">
                 <h3 class="text-lg font-bold text-brand-800 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-plus-circle"></i>
-                    إضافة / تعديل بوليصة شحن
+                    إضافة / تعديل شحنة
                 </h3>
                 <form id="trackingForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-2">رقم أمر الشراء/الطلب</label>
-                        <input type="text" id="track-order-id" placeholder="مثال: PO-2024-001" class="w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition text-sm" required>
+                        <label class="block text-xs font-bold text-slate-600 mb-2">رقم الطلب</label>
+                        <input type="text" id="track-order-id" placeholder="مثال: ORD-001" class="w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition text-sm" required>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-2">رقم بوليصة الشحن/الفاتورة</label>
-                        <input type="text" id="track-shipment-number" placeholder="مثال: INV-SHP-12345" class="w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition text-sm" required>
+                        <label class="block text-xs font-bold text-slate-600 mb-2">رقم بوليصة الشحن</label>
+                        <input type="text" id="track-shipment-number" placeholder="مثال: SHP-12345" class="w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition text-sm" required>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-2">حالة الشحنة</label>
+                        <label class="block text-xs font-bold text-slate-600 mb-2">حالة التتبع</label>
                         <select id="track-status" class="w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition text-sm">
-                            <option value="تم التحضير">تم التحضير للشحن</option>
-                            <option value="في المستودع">الشحنة في المستودع</option>
-                            <option value="في الطريق">الشحنة في الطريق</option>
-                            <option value="وصلت المستودع">وصلت للمستودع المقابل</option>
-                            <option value="تم الاستلام">تم استلام الشحنة كاملة</option>
+                            <option value="تم التحضير">تم التحضير</option>
+                            <option value="بالمستودع">بالمستودع</option>
+                            <option value="في الطريق">في الطريق</option>
+                            <option value="تم الاستلام">تم الاستلام</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-2">ملاحظات إضافية</label>
-                        <input type="text" id="track-notes" placeholder="مثال: تأخير بسبب الطقس (اختياري)" class="w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition text-sm">
+                        <label class="block text-xs font-bold text-slate-600 mb-2">ملاحظات</label>
+                        <input type="text" id="track-notes" placeholder="ملاحظات إضافية (اختياري)" class="w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition text-sm">
                     </div>
                     <div class="flex items-end">
                         <label class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-slate-50 flex items-center gap-2 cursor-pointer hover:bg-slate-100 transition">
                             <input type="checkbox" id="track-delivered" class="accent-brand-600 w-4 h-4">
-                            <span class="text-sm font-bold text-slate-700">✅ تم استلام الشحنة بالكامل</span>
+                            <span class="text-sm font-bold text-slate-700">تم الاستلام النهائي</span>
                         </label>
                     </div>
                     <div class="flex gap-2">
                         <button type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white py-3 px-4 rounded-xl font-bold shadow-lg btn-pulse flex items-center justify-center gap-2">
                             <i class="fa-solid fa-save"></i>
-                            <span id="tracking-submit-text">حفظ بيانات الشحنة</span>
+                            <span id="tracking-submit-text">إضافة شحنة</span>
                         </button>
-                        <button type="button" onclick="resetTrackingForm()" class="px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold btn-pulse" title="تنظيف النموذج">
-                            <i class="fa-solid fa-rotate-left"></i> إعادة تعيين
+                        <button type="button" onclick="resetTrackingForm()" class="px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold btn-pulse">
+                            <i class="fa-solid fa-times"></i>
                         </button>
                     </div>
                 </form>
@@ -674,28 +744,28 @@
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
                     <h3 class="text-lg font-bold text-brand-800 flex items-center gap-2">
                         <i class="fa-solid fa-list"></i>
-                        قائمة الشحنات المحفوظة
+                        قائمة الشحنات
                     </h3>
                     <div class="flex gap-2 flex-wrap">
                         <button onclick="filterTracking('all')" id="filter-all" class="filter-btn px-3 py-1 rounded-lg text-xs font-bold bg-brand-600 text-white">
-                            الكل <span class="ml-1">(<span id="count-all">0</span>)</span>
+                            الكل (<span id="count-all">0</span>)
                         </button>
                         <button onclick="filterTracking('pending')" id="filter-pending" class="filter-btn px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600">
-                            قيد الشحن <span class="ml-1">(<span id="count-pending">0</span>)</span>
+                            قيد الشحن (<span id="count-pending">0</span>)
                         </button>
                         <button onclick="filterTracking('delivered')" id="filter-delivered" class="filter-btn px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600">
-                            وصلت بنجاح <span class="ml-1">(<span id="count-delivered">0</span>)</span>
+                            مستلم (<span id="count-delivered">0</span>)
                         </button>
                     </div>
                 </div>
                 <div class="overflow-x-auto rounded-xl border border-slate-200" style="max-height: 60vh;">
                     <table class="w-full text-xs sm:text-sm border-collapse">
-                        <thead class="bg-gradient-to-r from-brand-50 to-purple-50 text-brand-900 font-bold sticky top-0 z-10 shadow-sm">
+                        <thead class="bg-gradient-to-r from-brand-50 to-purple-50 text-brand-900 font-bold sticky top-0 z-10">
                             <tr>
-                                <th class="p-3 text-right whitespace-nowrap">رقم أمر الشراء</th>
-                                <th class="p-3 text-right whitespace-nowrap">رقم الفاتورة/البوليصة</th>
-                                <th class="p-3 text-center whitespace-nowrap">حالة الشحنة</th>
-                                <th class="p-3 text-center whitespace-nowrap">تم الاستلام</th>
+                                <th class="p-3 text-right whitespace-nowrap">رقم الطلب</th>
+                                <th class="p-3 text-right whitespace-nowrap">رقم البوليصة</th>
+                                <th class="p-3 text-center whitespace-nowrap">حالة التتبع</th>
+                                <th class="p-3 text-center whitespace-nowrap">الاستلام</th>
                                 <th class="p-3 text-right wrap-text">ملاحظات</th>
                                 <th class="p-3 text-center whitespace-nowrap">آخر تحديث</th>
                                 <th class="p-3 text-center whitespace-nowrap no-print">إجراءات</th>
@@ -708,9 +778,8 @@
                     <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
                         <i class="fa-solid fa-truck-fast text-3xl text-slate-400"></i>
                     </div>
-                    <p class="text-slate-500 font-bold text-lg">لا توجد شحنات مسجلة حالياً</p>
-                    <p class="text-xs text-slate-400 mt-2">ابدأ بإضافة بيانات شحنة جديدة من النموذج في الأعلى</p>
-                    <p class="text-xs text-slate-300 mt-3">تعليمات: أدخل أرقام الطلبات والفواتير، حدد الحالة، وانقر حفظ لحفظ البيانات</p>
+                    <p class="text-slate-500 font-bold">لا توجد شحنات مسجلة</p>
+                    <p class="text-xs text-slate-400 mt-1">ابدأ بإضافة شحنة جديدة من النموذج أعلاه</p>
                 </div>
             </div>
         </div>
@@ -756,8 +825,6 @@
 
     function init() {
         loadTracking();
-        renderTrackingTable();
-        updateTrackingCounts();
         const data = localStorage.getItem(STORAGE_KEY_INV);
         if (data) {
             try {
@@ -824,14 +891,11 @@
         const pendingShowroom = ordersData.showroom.filter(o => o.status !== 'completed').length;
         const pendingCafe = ordersData.cafe.filter(o => o.status !== 'completed').length;
         document.getElementById('dash-orders-count').innerText = pendingShowroom + pendingCafe;
-        
-        const pendingTracking = trackingData.filter(t => !t.delivered).length;
-        if(document.getElementById('dash-track-count')) document.getElementById('dash-track-count').innerText = pendingTracking;
     }
 
     function switchView(viewName) {
         currentView = viewName;
-        ['view-home', 'view-inventory', 'view-expiry', 'view-notes', 'view-orders', 'view-tracking'].forEach(id => {
+        ['view-home', 'view-inventory', 'view-expiry', 'view-notes', 'view-orders'].forEach(id => {
             document.getElementById(id).classList.add('hidden');
         });
         
@@ -839,9 +903,6 @@
         document.getElementById(`view-${viewName}`).classList.add('fade-in');
 
         selectedItemIdx = -1;
-        
-        // تحديث الترجمات للصفحة الجديدة
-        updateAllUIText();
         
         if (viewName === 'inventory') {
             resetInvUI();
@@ -856,9 +917,6 @@
         } else if (viewName === 'orders') {
             switchOrdersTab(activeOrdersTab);
             setOrderSource(activeOrderSource);
-        } else if (viewName === 'tracking') {
-            renderTrackingTable();
-            updateTrackingCounts();
         } else if (viewName === 'home') {
             updateDashboardStats();
         }
@@ -868,762 +926,9 @@
         switchView('home');
     }
 
-    // ========== LANGUAGE SYSTEM ==========
-    let currentLanguage = localStorage.getItem('app-language') || 'ar';
-
-    const translations = {
-        ar: {
-            appTitle: "نظام الإدارة المتكامل - تطوير أحمد الطيب",
-            versionText: "نسخة محسنة V2.4",
-            dashboard: "لوحة القيادة والمتابعة",
-            overview: "نظرة عامة على حالة العمل",
-            inventory: "الجرد العام",
-            inventorySubtitle: "إدارة الكميات وحذف الأصناف",
-            expiry: "تنبيهات الصلاحية",
-            expirySubtitle: "متابعة التواريخ والدفعات",
-            notes: "دليل القهوة",
-            notesSubtitle: "الوصفات والإيحاءات",
-            orders: "طلبات قيد الانتظار",
-            ordersSubtitle: "تشمل المعرض والكافيه",
-            tracking: "تتبع الشحنات",
-            trackingSubtitle: "بوليصات الشحن والطلبات",
-            saveChanges: "حفظ التغييرات",
-            home: "الرئيسية",
-            english: "English",
-            importInventory: "استيراد (الجرد فقط)",
-            exportReport: "تصدير (التقرير الشامل)",
-            deleteAllData: "حذف جميع بيانات التطبيق",
-            addOrder: "إضافة طلب جديد",
-            orderNumber: "رقم الطلب",
-            company: "اسم المحمصة أو الشركة",
-            orderType: "نوع الطلب",
-            orderDate: "تاريخ الطلب",
-            additionalNotes: "ملاحظات إضافية",
-            registerOrder: "تسجيل الطلب",
-            ordersList: "قائمة الطلبات الجارية",
-            print: "طباعة",
-            noOrders: "لا توجد طلبات مسجلة في هذا القسم",
-            inventoryManagement: "إدارة الجرد",
-            barcode: "باركود أو اسم...",
-            resetInventory: "تصفير كميات الجرد فقط",
-            currentQuantity: "الكمية الحالية",
-            systemQuantity: "الكمية بالنظام",
-            add: "إضافة (+)",
-            subtract: "خصم (-)",
-            quantity: "الكمية",
-            confirmOperation: "تأكيد العملية",
-            inventoryRecord: "سجل الجرد",
-            code: "الكود",
-            item: "الصنف",
-            system: "النظام",
-            actual: "الفعلي",
-            difference: "الفارق",
-            expiryManagement: "إدارة التواريخ",
-            search: "بحث عن صنف...",
-            resetExpiryData: "حذف سجل التواريخ فقط",
-            roastDate: "تاريخ التحميص (اليوم-الشهر-السنة)",
-            expiryDuration: "مدة الصلاحية (أشهر)",
-            batchQuantity: "الكمية لهذه الدفعة",
-            addDate: "إضافة التاريخ",
-            registeredDates: "الدفعات والتواريخ المسجلة:",
-            expiryReport: "تقرير الصلاحية التفصيلي",
-            roastingDate: "تاريخ التحميص",
-            expiryDate: "تاريخ الانتهاء",
-            status: "الحالة",
-            coffeGuide: "دليل القهوة",
-            searchCoffee: "ابحث بالإيحاء...",
-            resetHints: "تصفير سجل الإيحاءات فقط",
-            roastery: "اسم المحمصة",
-            hints: "الإيحاءات / الملاحظات",
-            saveChangesBtn: "حفظ التعديلات",
-            coffeeGuide: "دليل القهوة",
-            shipmentTracking: "تتبع بوليصات الشحن",
-            manageShipments: "إدارة ومتابعة شحنات الطلبات",
-            exportExcel: "تصدير Excel",
-            addShipment: "إضافة / تعديل بوليصة شحن",
-            orderIdField: "رقم أمر الشراء/الطلب",
-            shipmentNumber: "رقم بوليصة الشحن/الفاتورة",
-            shipmentStatus: "حالة الشحنة",
-            prepared: "تم التحضير للشحن",
-            inWarehouse: "الشحنة في المستودع",
-            inTransit: "الشحنة في الطريق",
-            arrivedWarehouse: "وصلت للمستودع المقابل",
-            received: "تم استلام الشحنة كاملة",
-            additionalRemarks: "ملاحظات إضافية",
-            finalReceived: "✅ تم استلام الشحنة بالكامل",
-            saveShipmentData: "حفظ بيانات الشحنة",
-            resetForm: "إعادة تعيين",
-            shipmentsList: "قائمة الشحنات المحفوظة",
-            all: "الكل",
-            pending: "قيد الشحن",
-            delivered: "وصلت بنجاح",
-            noShipments: "لا توجد شحنات مسجلة حالياً",
-            startAddingShipment: "ابدأ بإضافة بيانات شحنة جديدة من النموذج في الأعلى",
-            instructions: "تعليمات: أدخل أرقام الطلبات والفواتير، حدد الحالة، وانقر حفظ لحفظ البيانات",
-            actions: "إجراءات",
-            edit: "تعديل",
-            delete: "حذف",
-            lastUpdate: "آخر تحديث",
-            purchaseOrder: "رقم أمر الشراء",
-            invoiceNumber: "رقم الفاتورة/البوليصة",
-            hasReceived: "تم الاستلام",
-            remarks: "ملاحظات",
-            registrationOrder: "تسجيل الطلب",
-            cancel: "إلغاء التعديل",
-            deleteAllOrders: "حذف بيانات الطلبات",
-            deleteCurrentItem: "حذف الصنف نهائياً",
-            addQuantity: "إضافة (+)",
-            subtractQuantity: "خصم (-)",
-            addDate: "إضافة التاريخ",
-            deleteHints: "حذف سجل الإيحاءات فقط",
-            saveChangesBtn: "حفظ التعديلات",
-            editOrder: "تعديل الطلب",
-            addNewShipment: "إضافة / تعديل بوليصة شحن",
-            // إضافات جديدة لجميع الخيارات والرسائل
-            changeLang: "تغيير اللغة",
-            pickOrder: "أمر شراء",
-            materialRequest: "طلب مواد",
-            transferRequest: "طلب تحويل بين الفروع",
-            goodsInTransit: "مستودع بضاعة في الطريق",
-            showroom: "المعرض",
-            cafe: "الكافيه",
-            selectItemToStart: "امسح الكود للبدء",
-            selectItemToEdit: "اختر صنفاً لتعديل بياناته",
-            selectItemToAddDate: "اختر صنفاً لإدارة تواريخه",
-            coffeeNames: "أسماء القهوة",
-            selectCoffeeToEdit: "اختر صنفاً لتعديل بياناته",
-            noHints: "لا توجد ملاحظات",
-            addNewItem: "إضافة صنف جديد",
-            confirmAddNewItem: "إضافة صنف جديد للنظام",
-            itemCode: "كود الصنف",
-            itemName: "اسم الصنف",
-            defaultQuantity: "الكمية الافتراضية",
-            save: "حفظ",
-            cancel: "إلغاء",
-            roastery: "اسم المحمصة",
-            enterHints: "أدخل الإيحاءات هنا...",
-            exampleSupplier: "مثلاً: محمصة الرياض",
-            orderNumberExample: "مثلاً: PO-2024-001",
-            supplierNamePlaceholder: "اسم المورد...",
-            additionalDetails: "أي تفاصيل إضافية...",
-            updateOrder: "تم تحديث الطلب بنجاح",
-            orderAdded: "تم إضافة الطلب بنجاح",
-            deleteOrderConfirm: "هل أنت متأكد من حذف هذا الطلب نهائياً؟",
-            orderDeleted: "تم حذف الطلب",
-            fillAllFields: "يرجى ملء جميع الحقول",
-            quantityUpdated: "تم تحديث الكمية",
-            deleteItemConfirm: "هل أنت متأكد من حذف الصنف",
-            permanentlyFrom: "نهائياً من النظام؟",
-            itemDeletedSuccess: "تم حذف الصنف بنجاح",
-            addDateSuccessful: "تم إضافة الدفعة",
-            deleteAllOrdersConfirm: "هل أنت متأكد من حذف جميع بيانات الطلبات؟",
-            allOrdersDeleted: "تم حذف بيانات الطلبات",
-            deleteBatchConfirm: "حذف هذا التاريخ؟",
-            batchDeleted: "تم حذف الدفعة",
-            fillDateAndQuantity: "يرجى إدخال التاريخ والكمية",
-            clearAllConfirm: "هل أنت متأكد تماماً من حذف جميع بيانات التطبيق بالكامل",
-            cannotBeUndone: "لا يمكن التراجع عن هذا الإجراء!",
-            allDataDeletedSuccess: "تم حذف جميع بيانات التطبيق بنجاح",
-            orderModifying: "تم إنجاز الطلب",
-            orderRestored: "تم إعادة الطلب لقائمة الانتظار",
-            recordsNot: "لا توجد تواريخ",
-            expired: "منتهي",
-            daysRemaining: "يوم",
-            monthsRemaining: "شهر",
-            barakiData: "بيانات بوليصات الشحن",
-            trackingTitle: "رقم أمر الشراء/الطلب",
-            billNumber: "رقم بوليصة الشحن/الفاتورة",
-            shipmentExample: "مثال: INV-SHP-12345",
-            orderExample: "مثال: PO-2024-001",
-            weatherDelay: "مثال: تأخير بسبب الطقس (اختياري)",
-            fullReceipt: "✅ تم استلام الشحنة بالكامل",
-            preparedForShip: "تم التحضير للشحن",
-            warehouseStorage: "الشحنة في المستودع",
-            inShipmentTransit: "الشحنة في الطريق",
-            arrivedCounterpart: "وصلت للمستودع المقابل",
-            fullyReceived: "تم استلام الشحنة كاملة",
-            allShipments: "الكل",
-            inTransitStatus: "قيد الشحن",
-            successfullyReceived: "وصلت بنجاح",
-            noShipmentsRecorded: "لا توجد شحنات مسجلة حالياً",
-            startByAddingNew: "ابدأ بإضافة بيانات شحنة جديدة من النموذج في الأعلى",
-            instructionsTrack: "تعليمات: أدخل أرقام الطلبات والفواتير، حدد الحالة، وانقر حفظ لحفظ البيانات",
-            shipmentDataSaved: "تم حفظ بيانات الشحنة بنجاح",
-            dataNotEmpty: "❌ لا توجد بيانات شحنات للتصدير",
-            exportSuccess: "✅ تم تصدير البيانات بنجاح",
-            formCleaned: "تم تنظيف النموذج",
-            underModification: "🔄 قيد التعديل - غير البيانات ثم انقر الحفظ",
-            updateShipment: "💾 تحديث بيانات الشحنة",
-            deleteShipmentConfirm: "هل أنت متأكد من حذف الشحنة",
-            shipmentDeleted: "🗑️ تم حذف الشحنة بنجاح",
-            fillOrderAndShipment: "يرجى إدخال رقم الطلب ورقم البوليصة",
-            shipmentAdded: "✅ تمت إضافة الشحنة بنجاح وحفظها",
-            shipmentUpdated: "✅ تم تحديث بيانات الشحنة بنجاح",
-            resetInventoryConfirm: "هل أنت متأكد من تصفير جميع الكميات الفعلية في صفحة الجرد؟",
-            itemsNotDeleted: "(لن يتم حذف الأصناف، فقط تصفير الكميات)",
-            inventoryCleared: "تم تصفير كميات الجرد",
-            deleteAllExpiry: "هل أنت متأكد من حذف جميع تواريخ الصلاحية المسجلة؟",
-            dateRecordDeleted: "تم حذف سجل التواريخ",
-            deleteAllHints: "هل أنت متأكد من حذف جميع الإيحاءات والملاحظات؟",
-            hintsRecordDeleted: "تم حذف سجل الإيحاءات",
-            languageChanged: "تم تغيير اللغة إلى",
-            arabic: "العربية 🇸🇦",
-            englishLang: "English 🇬🇧",
-            importedSuccessfully: "تم تحديث البيانات في جميع الصفحات",
-            notesImported: "تم استيراد الإيحاءات والمحامص",
-            expiryImported: "تم استيراد أصناف الصلاحية",
-            inventoryImported: "تم استيراد بيانات الجرد",
-            fileReadError: "خطأ في قراءة الملف",
-            inventoryReport: "تقرير_الجرد",
-            expiryReport: "تقرير_تواريخ_الانتهاء_المفصل",
-            hintsReport: "تقرير_الإيحاءات",
-            comprehensiveReport: "التقرير_الشامل_المفصل",
-            shipmentsReport: "تتبع_شحنات",
-            tableRowAction: "تم إنجاز الطلب"
-        },
-        en: {
-            appTitle: "Integrated Management System - Development by Ahmed Al-Tayyib",
-            versionText: "Enhanced Version V2.4",
-            dashboard: "Dashboard and Monitoring",
-            overview: "Overview of Work Status",
-            inventory: "General Inventory",
-            inventorySubtitle: "Manage quantities and delete items",
-            expiry: "Expiry Alerts",
-            expirySubtitle: "Track dates and batches",
-            notes: "Coffee Guide",
-            notesSubtitle: "Recipes and notes",
-            orders: "Pending Orders",
-            ordersSubtitle: "Showroom and Cafe",
-            tracking: "Shipment Tracking",
-            trackingSubtitle: "Bills of lading and orders",
-            saveChanges: "Save Changes",
-            home: "Home",
-            english: "عربي",
-            importInventory: "Import (Inventory Only)",
-            exportReport: "Export (Comprehensive Report)",
-            deleteAllData: "Delete All Application Data",
-            addOrder: "Add New Order",
-            orderNumber: "Order Number",
-            company: "Roastery or Company Name",
-            orderType: "Order Type",
-            orderDate: "Order Date",
-            additionalNotes: "Additional Notes",
-            registerOrder: "Register Order",
-            ordersList: "Current Orders List",
-            print: "Print",
-            noOrders: "No orders registered in this section",
-            inventoryManagement: "Inventory Management",
-            barcode: "Barcode or Name...",
-            resetInventory: "Reset Inventory Quantities Only",
-            currentQuantity: "Current Quantity",
-            systemQuantity: "System Quantity",
-            add: "Add (+)",
-            subtract: "Subtract (-)",
-            quantity: "Quantity",
-            confirmOperation: "Confirm Operation",
-            inventoryRecord: "Inventory Record",
-            code: "Code",
-            item: "Item",
-            system: "System",
-            actual: "Actual",
-            difference: "Difference",
-            expiryManagement: "Date Management",
-            search: "Search for item...",
-            resetExpiryData: "Delete Date Record Only",
-            roastDate: "Roast Date (Day-Month-Year)",
-            expiryDuration: "Expiry Duration (Months)",
-            batchQuantity: "Quantity for This Batch",
-            addDate: "Add Date",
-            registeredDates: "Registered Batches and Dates:",
-            expiryReport: "Detailed Expiry Report",
-            roastingDate: "Roasting Date",
-            expiryDate: "Expiry Date",
-            status: "Status",
-            coffeGuide: "Coffee Guide",
-            searchCoffee: "Search by hint...",
-            resetHints: "Reset Hints Record Only",
-            roastery: "Roastery Name",
-            hints: "Hints / Notes",
-            saveChangesBtn: "Save Changes",
-            coffeeGuide: "Coffee Guide",
-            shipmentTracking: "Track Bills of Lading",
-            manageShipments: "Manage and track shipments",
-            exportExcel: "Export Excel",
-            addShipment: "Add / Edit Shipment Bill",
-            orderIdField: "Purchase Order Number",
-            shipmentNumber: "Bill of Lading / Invoice Number",
-            shipmentStatus: "Shipment Status",
-            prepared: "Prepared for Shipment",
-            inWarehouse: "Shipment in Warehouse",
-            inTransit: "Shipment in Transit",
-            arrivedWarehouse: "Arrived at Counterpart Warehouse",
-            received: "Shipment Fully Received",
-            additionalRemarks: "Additional Remarks",
-            finalReceived: "✅ Shipment Fully Received",
-            saveShipmentData: "Save Shipment Data",
-            resetForm: "Reset",
-            shipmentsList: "Saved Shipments List",
-            all: "All",
-            pending: "In Transit",
-            delivered: "Successfully Received",
-            noShipments: "No shipments registered currently",
-            startAddingShipment: "Start by adding new shipment data from the form above",
-            instructions: "Instructions: Enter order and invoice numbers, select status, and click save",
-            actions: "Actions",
-            edit: "Edit",
-            delete: "Delete",
-            lastUpdate: "Last Update",
-            purchaseOrder: "Purchase Order Number",
-            invoiceNumber: "Invoice/Bill Number",
-            hasReceived: "Received",
-            remarks: "Remarks",
-            registrationOrder: "Register Order",
-            cancel: "Cancel Modification",
-            deleteAllOrders: "Delete Order Data",
-            deleteCurrentItem: "Delete Item Permanently",
-            addQuantity: "Add (+)",
-            subtractQuantity: "Subtract (-)",
-            addDate: "Add Date",
-            deleteHints: "Reset Hints Record Only",
-            saveChangesBtn: "Save Changes",
-            editOrder: "Edit Order",
-            addNewShipment: "Add / Edit Shipment Bill",
-            changeLang: "Change Language",
-            pickOrder: "Purchase Order",
-            materialRequest: "Material Request",
-            transferRequest: "Transfer Between Branches",
-            goodsInTransit: "Goods in Transit Warehouse",
-            showroom: "Showroom",
-            cafe: "Cafe",
-            selectItemToStart: "Scan code to start",
-            selectItemToEdit: "Select item to edit data",
-            selectItemToAddDate: "Select item to manage dates",
-            coffeeNames: "Coffee Names",
-            selectCoffeeToEdit: "Select item to edit data",
-            noHints: "No notes",
-            addNewItem: "Add new item",
-            confirmAddNewItem: "Add new item to system",
-            itemCode: "Item Code",
-            itemName: "Item Name",
-            defaultQuantity: "Default Quantity",
-            save: "Save",
-            cancel: "Cancel",
-            roastery: "Roastery Name",
-            enterHints: "Enter hints here...",
-            exampleSupplier: "Example: Riyadh Roastery",
-            orderNumberExample: "Example: PO-2024-001",
-            supplierNamePlaceholder: "Supplier name...",
-            additionalDetails: "Any additional details...",
-            updateOrder: "Order updated successfully",
-            orderAdded: "Order added successfully",
-            deleteOrderConfirm: "Are you sure you want to delete this order permanently?",
-            orderDeleted: "Order deleted",
-            fillAllFields: "Please fill all fields",
-            quantityUpdated: "Quantity updated",
-            deleteItemConfirm: "Are you sure you want to delete item",
-            permanentlyFrom: "permanently from the system?",
-            itemDeletedSuccess: "Item deleted successfully",
-            addDateSuccessful: "Batch added",
-            deleteAllOrdersConfirm: "Are you sure you want to delete all order data?",
-            allOrdersDeleted: "Order data deleted",
-            deleteBatchConfirm: "Delete this date?",
-            batchDeleted: "Batch deleted",
-            fillDateAndQuantity: "Please enter date and quantity",
-            clearAllConfirm: "Are you absolutely sure you want to delete all application data completely",
-            cannotBeUndone: "This action cannot be undone!",
-            allDataDeletedSuccess: "All application data deleted successfully",
-            orderModifying: "Order completed",
-            orderRestored: "Order restored to pending list",
-            recordsNot: "No dates",
-            expired: "Expired",
-            daysRemaining: "day",
-            monthsRemaining: "month",
-            barakiData: "Bills of Lading Data",
-            trackingTitle: "Purchase Order Number",
-            billNumber: "Bill of Lading Number",
-            shipmentExample: "Example: INV-SHP-12345",
-            orderExample: "Example: PO-2024-001",
-            weatherDelay: "Example: Delay due to weather (optional)",
-            fullReceipt: "✅ Shipment Fully Received",
-            preparedForShip: "Prepared for Shipment",
-            warehouseStorage: "Shipment in Warehouse",
-            inShipmentTransit: "Shipment in Transit",
-            arrivedCounterpart: "Arrived at Counterpart Warehouse",
-            fullyReceived: "Shipment Fully Received",
-            allShipments: "All",
-            inTransitStatus: "In Transit",
-            successfullyReceived: "Successfully Received",
-            noShipmentsRecorded: "No shipments registered currently",
-            startByAddingNew: "Start by adding new shipment data from the form above",
-            instructionsTrack: "Instructions: Enter order and invoice numbers, select status, and click save",
-            shipmentDataSaved: "Shipment data saved successfully",
-            dataNotEmpty: "❌ No shipment data to export",
-            exportSuccess: "✅ Data exported successfully",
-            formCleaned: "Form cleaned",
-            underModification: "🔄 Under modification - change data and click save",
-            updateShipment: "💾 Update shipment data",
-            deleteShipmentConfirm: "Are you sure you want to delete shipment",
-            shipmentDeleted: "🗑️ Shipment deleted successfully",
-            fillOrderAndShipment: "Please enter order number and bill number",
-            shipmentAdded: "✅ Shipment added and saved successfully",
-            shipmentUpdated: "✅ Shipment data updated successfully",
-            resetInventoryConfirm: "Are you sure you want to reset all actual quantities in inventory page?",
-            itemsNotDeleted: "(Items will not be deleted, only quantities reset)",
-            inventoryCleared: "Inventory quantities cleared",
-            deleteAllExpiry: "Are you sure you want to delete all recorded expiry dates?",
-            dateRecordDeleted: "Date record deleted",
-            deleteAllHints: "Are you sure you want to delete all hints and notes?",
-            hintsRecordDeleted: "Hints record deleted",
-            languageChanged: "Language changed to",
-            arabic: "Arabic 🇸🇦",
-            englishLang: "English 🇬🇧",
-            importedSuccessfully: "Data updated in all pages",
-            notesImported: "Hints and roasteries imported",
-            expiryImported: "Expiry items imported",
-            inventoryImported: "Inventory data imported",
-            fileReadError: "Error reading file",
-            inventoryReport: "Inventory_Report",
-            expiryReport: "Expiry_Dates_Detailed_Report",
-            hintsReport: "Hints_Report",
-            comprehensiveReport: "Comprehensive_Detailed_Report",
-            shipmentsReport: "Shipment_Tracking",
-            tableRowAction: "Order completed"
-        }
-    };
-
-    function toggleLanguage() {
-        currentLanguage = currentLanguage === 'ar' ? 'en' : 'ar';
-        localStorage.setItem('app-language', currentLanguage);
-        applyLanguage();
-        // لا نعيد تحميل الصفحة - تحديث الترجمات مباشرة يكفي
-    }
-
-    function applyLanguage() {
-        const html = document.documentElement;
-        if (currentLanguage === 'ar') {
-            html.lang = 'ar';
-            html.dir = 'rtl';
-            document.body.style.direction = 'rtl';
-        } else {
-            html.lang = 'en';
-            html.dir = 'ltr';
-            document.body.style.direction = 'ltr';
-        }
-        
-        updateAllUIText();
-    }
-
-    function updateAllUIText() {
-        const t = translations[currentLanguage];
-        
-        // قائمة شاملة من جميع الترجمات النصية
-        const replaceAll = (text) => {
-            if (!text) return text;
-            
-            const replacements = {
-                // العناوين الرئيسية
-                'الجرد العام': t.inventory,
-                'General Inventory': t.inventory,
-                'إدارة الكميات وحذف الأصناف': t.inventorySubtitle,
-                'Manage quantities and delete items': t.inventorySubtitle,
-                'تنبيهات الصلاحية': t.expiry,
-                'Expiry Alerts': t.expiry,
-                'متابعة التواريخ والدفعات': t.expirySubtitle,
-                'Track dates and batches': t.expirySubtitle,
-                'دليل القهوة': t.notes,
-                'Coffee Guide': t.notes,
-                'الوصفات والإيحاءات': t.notesSubtitle,
-                'Recipes and notes': t.notesSubtitle,
-                'طلبات قيد الانتظار': t.orders,
-                'Pending Orders': t.orders,
-                'تشمل المعرض والكافيه': t.ordersSubtitle,
-                'Showroom and Cafe': t.ordersSubtitle,
-                'تتبع الشحنات': t.tracking,
-                'Shipment Tracking': t.tracking,
-                'بوليصات الشحن والطلبات': t.trackingSubtitle,
-                'Bills of lading and orders': t.trackingSubtitle,
-                'لوحة القيادة والمتابعة': t.dashboard,
-                'Dashboard and Monitoring': t.dashboard,
-                'نظرة عامة على حالة العمل': t.overview,
-                'Overview of Work Status': t.overview,
-                'نظام الإدارة المتكامل - تطوير أحمد الطيب': t.appTitle,
-                'Integrated Management System - Development by Ahmed Al-Tayyib': t.appTitle,
-                'نسخة محسنة V2.4': t.versionText,
-                'Enhanced Version V2.4': t.versionText,
-                
-                // الأزرار والإجراءات
-                'حفظ التغييرات': t.saveChanges,
-                'Save Changes': t.saveChanges,
-                'حفظ التعديلات': t.saveChangesBtn,
-                'Save Changes': t.saveChangesBtn,
-                'استيراد (الجرد فقط)': t.importInventory,
-                'Import (Inventory Only)': t.importInventory,
-                'تصدير (التقرير الشامل)': t.exportReport,
-                'Export (Comprehensive Report)': t.exportReport,
-                'حذف جميع بيانات التطبيق': t.deleteAllData,
-                'Delete All Application Data': t.deleteAllData,
-                'إضافة طلب جديد': t.addOrder,
-                'Add New Order': t.addOrder,
-                'تسجيل الطلب': t.registerOrder,
-                'Register Order': t.registerOrder,
-                'قائمة الطلبات الجارية': t.ordersList,
-                'Current Orders List': t.ordersList,
-                'طباعة': t.print,
-                'Print': t.print,
-                'إدارة الجرد': t.inventoryManagement,
-                'Inventory Management': t.inventoryManagement,
-                'تصفير كميات الجرد فقط': t.resetInventory,
-                'Reset Inventory Quantities Only': t.resetInventory,
-                'حذف بيانات الطلبات': t.deleteAllOrders,
-                'Delete Order Data': t.deleteAllOrders,
-                'حذف الصنف نهائياً': t.deleteCurrentItem,
-                'Delete Item Permanently': t.deleteCurrentItem,
-                'إضافة (+)': t.add,
-                'Add (+)': t.add,
-                'خصم (-)': t.subtract,
-                'Subtract (-)': t.subtract,
-                'تأكيد العملية': t.confirmOperation,
-                'Confirm Operation': t.confirmOperation,
-                'إدارة التواريخ': t.expiryManagement,
-                'Date Management': t.expiryManagement,
-                'حذف سجل التواريخ فقط': t.resetExpiryData,
-                'Delete Date Record Only': t.resetExpiryData,
-                'إضافة التاريخ': t.addDate,
-                'Add Date': t.addDate,
-                'تقرير الصلاحية التفصيلي': t.expiryReport,
-                'Detailed Expiry Report': t.expiryReport,
-                'تصفير سجل الإيحاءات فقط': t.resetHints,
-                'Reset Hints Record Only': t.resetHints,
-                'حفظ الملاحظات': t.saveChangesBtn,
-                'Save Notes': t.saveChangesBtn,
-                'تصدير Excel': t.exportExcel,
-                'Export Excel': t.exportExcel,
-                'إضافة / تعديل بوليصة شحن': t.addShipment,
-                'Add / Edit Shipment Bill': t.addShipment,
-                'حفظ بيانات الشحنة': t.saveShipmentData,
-                'Save Shipment Data': t.saveShipmentData,
-                'إعادة تعيين': t.resetForm,
-                'Reset': t.resetForm,
-                'إلغاء التعديل': t.cancel,
-                'Cancel Modification': t.cancel,
-                'تعديل': t.edit,
-                'Edit': t.edit,
-                'حذف': t.delete,
-                'Delete': t.delete,
-                
-                // عناوين الحقول
-                'رقم الطلب': t.orderNumber,
-                'Order Number': t.orderNumber,
-                'اسم المحمصة أو الشركة': t.company,
-                'Roastery or Company Name': t.company,
-                'نوع الطلب': t.orderType,
-                'Order Type': t.orderType,
-                'تاريخ الطلب': t.orderDate,
-                'Order Date': t.orderDate,
-                'ملاحظات إضافية': t.additionalNotes,
-                'Additional Notes': t.additionalNotes,
-                'باركود أو اسم...': t.barcode,
-                'Barcode or Name...': t.barcode,
-                'الكمية الحالية': t.currentQuantity,
-                'Current Quantity': t.currentQuantity,
-                'الكمية بالنظام': t.systemQuantity,
-                'System Quantity': t.systemQuantity,
-                'الكمية': t.quantity,
-                'Quantity': t.quantity,
-                'سجل الجرد': t.inventoryRecord,
-                'Inventory Record': t.inventoryRecord,
-                'الكود': t.code,
-                'Code': t.code,
-                'الصنف': t.item,
-                'Item': t.item,
-                'النظام': t.system,
-                'System': t.system,
-                'الفعلي': t.actual,
-                'Actual': t.actual,
-                'الفارق': t.difference,
-                'Difference': t.difference,
-                'بحث عن صنف...': t.search,
-                'Search for item...': t.search,
-                'تاريخ التحميص (اليوم-الشهر-السنة)': t.roastDate,
-                'Roast Date (Day-Month-Year)': t.roastDate,
-                'مدة الصلاحية (أشهر)': t.expiryDuration,
-                'Expiry Duration (Months)': t.expiryDuration,
-                'الكمية لهذه الدفعة': t.batchQuantity,
-                'Quantity for This Batch': t.batchQuantity,
-                'الدفعات والتواريخ المسجلة:': t.registeredDates,
-                'Registered Batches and Dates:': t.registeredDates,
-                'تاريخ التحميص': t.roastingDate,
-                'Roasting Date': t.roastingDate,
-                'تاريخ الانتهاء': t.expiryDate,
-                'Expiry Date': t.expiryDate,
-                'الحالة': t.status,
-                'Status': t.status,
-                'ابحث بالإيحاء...': t.searchCoffee,
-                'Search by hint...': t.searchCoffee,
-                'اسم المحمصة': t.roastery,
-                'Roastery Name': t.roastery,
-                'الإيحاءات / الملاحظات': t.hints,
-                'Hints / Notes': t.hints,
-                'إدارة ومتابعة شحنات الطلبات': t.manageShipments,
-                'Manage and track shipments': t.manageShipments,
-                'رقم أمر الشراء/الطلب': t.orderIdField,
-                'Purchase Order Number': t.orderIdField,
-                'رقم بوليصة الشحن/الفاتورة': t.shipmentNumber,
-                'Bill of Lading / Invoice Number': t.shipmentNumber,
-                'حالة الشحنة': t.shipmentStatus,
-                'Shipment Status': t.shipmentStatus,
-                'تم التحضير للشحن': t.prepared,
-                'Prepared for Shipment': t.prepared,
-                'الشحنة في المستودع': t.inWarehouse,
-                'Shipment in Warehouse': t.inWarehouse,
-                'الشحنة في الطريق': t.inTransit,
-                'Shipment in Transit': t.inTransit,
-                'وصلت للمستودع المقابل': t.arrivedWarehouse,
-                'Arrived at Counterpart Warehouse': t.arrivedWarehouse,
-                'تم استلام الشحنة كاملة': t.received,
-                'Shipment Fully Received': t.received,
-                'ملاحظات إضافية': t.additionalRemarks,
-                'Additional Remarks': t.additionalRemarks,
-                'قائمة الشحنات المحفوظة': t.shipmentsList,
-                'Saved Shipments List': t.shipmentsList,
-                'الكل': t.all,
-                'All': t.all,
-                'قيد الشحن': t.pending,
-                'In Transit': t.pending,
-                'وصلت بنجاح': t.delivered,
-                'Successfully Received': t.delivered,
-                'إجراءات': t.actions,
-                'Actions': t.actions,
-                'آخر تحديث': t.lastUpdate,
-                'Last Update': t.lastUpdate,
-                'رقم أمر الشراء': t.purchaseOrder,
-                'Purchase Order Number': t.purchaseOrder,
-                'رقم الفاتورة/البوليصة': t.invoiceNumber,
-                'Invoice/Bill Number': t.invoiceNumber,
-                'تم الاستلام': t.hasReceived,
-                'Received': t.hasReceived,
-                'ملاحظات': t.remarks,
-                'Remarks': t.remarks,
-                
-                // القوائم المنسدلة (Select Options)
-                'أمر شراء': t.pickOrder,
-                'Purchase Order': t.pickOrder,
-                'طلب مواد': t.materialRequest,
-                'Material Request': t.materialRequest,
-                'طلب تحويل بين الفروع': t.transferRequest,
-                'Transfer Between Branches': t.transferRequest,
-                'مستودع بضاعة في الطريق': t.goodsInTransit,
-                'Goods in Transit Warehouse': t.goodsInTransit,
-                'المعرض': t.showroom,
-                'Showroom': t.showroom,
-                'الكافيه': t.cafe,
-                'Cafe': t.cafe,
-                
-                // الرسائل والتنبيهات
-                'امسح الكود للبدء': t.selectItemToStart,
-                'Scan code to start': t.selectItemToStart,
-                'اختر صنفاً لتعديل بياناته': t.selectItemToEdit,
-                'Select item to edit data': t.selectItemToEdit,
-                'اختر صنفاً لإدارة تواريخه': t.selectItemToAddDate,
-                'Select item to manage dates': t.selectItemToAddDate,
-                'لا توجد ملاحظات': t.noHints,
-                'No notes': t.noHints,
-                'لا توجد طلبات مسجلة في هذا القسم': t.noOrders,
-                'No orders registered in this section': t.noOrders,
-                'لا توجد شحنات مسجلة حالياً': t.noShipments,
-                'No shipments registered currently': t.noShipments,
-                'ابدأ بإضافة بيانات شحنة جديدة من النموذج في الأعلى': t.startAddingShipment,
-                'Start by adding new shipment data from the form above': t.startAddingShipment,
-                'تعليمات: أدخل أرقام الطلبات والفواتير، حدد الحالة، وانقر حفظ لحفظ البيانات': t.instructions,
-                'Instructions: Enter order and invoice numbers, select status, and click save': t.instructions,
-            };
-            
-            let result = text;
-            for (const [old, newVal] of Object.entries(replacements)) {
-                if (result === old) {
-                    result = newVal;
-                    break;
-                }
-            }
-            return result;
-        };
-        
-        // تحديث جميع العناصر
-        document.querySelectorAll('*').forEach(el => {
-            // تحديث textContent للعناصر التي لديها نص فقط
-            if (el.childNodes.length > 0) {
-                Array.from(el.childNodes).forEach(node => {
-                    if (node.nodeType === 3) { // Text Node
-                        const originalText = node.textContent.trim();
-                        const translatedText = replaceAll(originalText);
-                        if (translatedText !== originalText && originalText.length > 0) {
-                            node.textContent = translatedText;
-                        }
-                    }
-                });
-            }
-            
-            // تحديث جميع option في select
-            if (el.tagName === 'OPTION') {
-                const originalText = el.textContent;
-                const translatedText = replaceAll(originalText);
-                if (translatedText !== originalText) {
-                    el.textContent = translatedText;
-                }
-            }
-            
-            // تحديث placeholder
-            if (el.placeholder) {
-                const originalPlaceholder = el.placeholder;
-                const translatedPlaceholder = replaceAll(originalPlaceholder);
-                if (translatedPlaceholder !== originalPlaceholder) {
-                    el.placeholder = translatedPlaceholder;
-                }
-            }
-            
-            // تحديث title
-            if (el.title) {
-                const originalTitle = el.title;
-                const translatedTitle = replaceAll(originalTitle);
-                if (translatedTitle !== originalTitle) {
-                    el.title = translatedTitle;
-                }
-            }
-            
-            // تحديث aria-label
-            if (el.getAttribute('aria-label')) {
-                const originalLabel = el.getAttribute('aria-label');
-                const translatedLabel = replaceAll(originalLabel);
-                if (translatedLabel !== originalLabel) {
-                    el.setAttribute('aria-label', translatedLabel);
-                }
-            }
-        });
-
-        // تحديث العنوان
-        document.title = t.appTitle;
-        
-        // تحديث زر اللغة
-        const langBtn = document.getElementById('lang-text');
-        if (langBtn) {
-            langBtn.textContent = currentLanguage === 'ar' ? 'English' : 'عربي';
-        }
-        
-        showToast(`✅ ${t.languageChanged} ${currentLanguage === 'ar' ? t.arabic : t.englishLang}`);
-    }
-
-    function getTranslation(key) {
-        return translations[currentLanguage]?.[key] || translations['ar']?.[key] || key;
-    }
-
-    function initLanguage() {
-        applyLanguage();
-    }
-
     function saveAllData() {
         localStorage.setItem(STORAGE_KEY_INV, JSON.stringify(inventory));
         localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(ordersData));
-        saveTracking();
         updateDashboardStats();
     }
 
@@ -1963,6 +1268,7 @@
         
         document.getElementById('inv-results').classList.add('hidden');
         document.getElementById('inv-search').value = '';
+
         document.getElementById('inv-empty').classList.add('hidden');
         document.getElementById('inv-card').classList.remove('hidden');
         document.getElementById('inv-name').innerText = item.name;
@@ -2574,10 +1880,7 @@
         XLSX.writeFile(wb, `${fileName}.xlsx`);
     }
 
-    window.addEventListener('load', function() {
-        initLanguage();
-        init();
-    });
+    window.addEventListener('load', init);
 
     // Show print footer on print
     window.addEventListener('beforeprint', function() {
@@ -2718,8 +2021,7 @@
             form.reset();
             delete form.dataset.editIdx;
             const submitText = document.getElementById('tracking-submit-text');
-            if (submitText) submitText.textContent = 'حفظ بيانات الشحنة';
-            showToast('تم تنظيف النموذج');
+            if (submitText) submitText.textContent = 'إضافة شحنة';
         }
     }
 
@@ -2733,45 +2035,40 @@
         document.getElementById('track-notes').value = item.notes || '';
         document.getElementById('track-delivered').checked = item.delivered;
         document.getElementById('trackingForm').dataset.editIdx = idx;
-        document.getElementById('tracking-submit-text').textContent = '💾 تحديث بيانات الشحنة';
-        showToast('🔄 قيد التعديل - غير البيانات ثم انقر الحفظ');
+        document.getElementById('tracking-submit-text').textContent = 'تحديث الشحنة';
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function deleteTracking(idx) {
-        const item = trackingData[idx];
-        if (confirm(`هل أنت متأكد من حذف الشحنة:\n📦 رقم الطلب: ${item.orderId}\n📄 رقم البوليصة: ${item.shipmentNumber}`)) {
+        if (confirm('هل أنت متأكد من حذف هذه الشحنة؟')) {
             trackingData.splice(idx, 1);
             saveTracking();
-            updateDashboardStats();
             renderTrackingTable();
-            showToast('🗑️ تم حذف الشحنة بنجاح');
+            showToast('تم حذف الشحنة بنجاح');
         }
     }
 
     function exportTrackingExcel() {
         if (trackingData.length === 0) {
-            showToast('❌ لا توجد بيانات شحنات للتصدير', 'error');
+            showToast('لا توجد بيانات للتصدير');
             return;
         }
 
         const data = trackingData.map(item => ({
-            'رقم أمر الشراء': item.orderId,
-            'رقم الفاتورة/البوليصة': item.shipmentNumber,
-            'حالة الشحنة': item.status,
-            'تم الاستلام': item.delivered ? '✅ نعم' : '⏳ لا',
+            'رقم الطلب': item.orderId,
+            'رقم البوليصة': item.shipmentNumber,
+            'حالة التتبع': item.status,
+            'تم الاستلام': item.delivered ? 'نعم' : 'لا',
             'ملاحظات': item.notes || '-',
             'آخر تحديث': new Date(item.lastUpdate).toLocaleString('ar-SA')
         }));
 
         const ws = XLSX.utils.json_to_sheet(data);
-        ws.columnWidths = [18, 18, 18, 12, 25, 20];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'تتبع الشحنات');
-        const filename = `تتبع_شحنات_${new Date().toISOString().split('T')[0]}.xlsx`;
-        XLSX.writeFile(wb, filename);
-        showToast('✅ تم تصدير البيانات بنجاح');
+        XLSX.writeFile(wb, `tracking_${new Date().toISOString().split('T')[0]}.xlsx`);
+        showToast('تم تصدير البيانات بنجاح');
     }
 
     const trackingFormEl = document.getElementById('trackingForm');
@@ -2796,25 +2093,18 @@
             if (this.dataset.editIdx !== undefined && this.dataset.editIdx !== '') {
                 trackingData[parseInt(this.dataset.editIdx)] = tracking;
                 delete this.dataset.editIdx;
-                document.getElementById('tracking-submit-text').textContent = 'حفظ بيانات الشحنة';
-                showToast('✅ تم تحديث بيانات الشحنة بنجاح');
+                document.getElementById('tracking-submit-text').textContent = 'إضافة شحنة';
+                showToast('تم تحديث الشحنة بنجاح');
             } else {
                 trackingData.push(tracking);
-                showToast('✅ تمت إضافة الشحنة بنجاح وحفظها');
+                showToast('تمت إضافة الشحنة بنجاح');
             }
 
             saveTracking();
-            updateDashboardStats();
             renderTrackingTable();
             resetTrackingForm();
         };
     }
-
-    // تهيئة التطبيق عند تحميل الصفحة
-    document.addEventListener('DOMContentLoaded', function() {
-        initLanguage();
-        init();
-    });
 
 </script>
 </body>
