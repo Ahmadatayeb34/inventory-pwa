@@ -245,40 +245,63 @@
         </div>
 
         <!-- Filters Bar -->
-        <div class="card p-3 flex flex-wrap gap-2 items-center no-print">
-            <div class="relative flex-1 min-w-[150px]">
-                <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                <input type="text" id="search-input" class="input-field pr-8" placeholder="بحث باسم الصنف أو الكود..."
-                    oninput="applyFilter('search', this.value)">
+        <div class="card p-3 no-print">
+            <div class="flex flex-wrap gap-2 items-center mb-2">
+                <div class="relative flex-1 min-w-[150px]">
+                    <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="search-input" class="input-field pr-8" placeholder="بحث باسم الصنف أو الكود..."
+                        oninput="applyFilter('search', this.value)">
+                </div>
+                <select id="status-filter" class="input-field w-auto" onchange="applyFilter('status', this.value)">
+                    <option value="all">جميع الحالات</option>
+                    <option value="critical">🔴 حرج فقط</option>
+                    <option value="medium">🟡 وسط فقط</option>
+                    <option value="normal">🟢 عادي فقط</option>
+                    <option value="ok">✅ مرتفع فقط</option>
+                    <option value="new">🔵 جديد فقط</option>
+                </select>
+                <select id="trend-filter" class="input-field w-auto" onchange="applyFilter('trend', this.value)">
+                    <option value="all">جميع الاتجاهات</option>
+                    <option value="down">📉 انخفاض</option>
+                    <option value="up">📈 ارتفاع</option>
+                    <option value="stable">➡️ ثابت</option>
+                </select>
+                <label class="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg px-3 h-9">
+                    <input type="checkbox" id="only-shortages" class="accent-primary-600 w-3.5 h-3.5" onchange="applyFilter('onlyShortages', this.checked)">
+                    <span class="text-xs font-bold text-slate-600">النواقص فقط</span>
+                </label>
+                <button onclick="resetFilters()" class="btn btn-secondary h-9 px-3" title="إعادة ضبط الفلاتر">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+                <button onclick="exportComparisonExcel()" class="btn btn-primary h-9 px-4">
+                    <i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">تصدير الظاهر</span>
+                </button>
             </div>
-            <select id="status-filter" class="input-field w-auto" onchange="applyFilter('status', this.value)">
-                <option value="all">جميع الحالات</option>
-                <option value="critical">🔴 حرج فقط</option>
-                <option value="medium">🟡 وسط فقط</option>
-                <option value="normal">🟢 عادي فقط</option>
-                <option value="ok">✅ مرتفع فقط</option>
-                <option value="new">🔵 جديد فقط</option>
-            </select>
-            <select id="trend-filter" class="input-field w-auto" onchange="applyFilter('trend', this.value)">
-                <option value="all">جميع الاتجاهات</option>
-                <option value="down">📉 انخفاض</option>
-                <option value="up">📈 ارتفاع</option>
-                <option value="stable">➡️ ثابت</option>
-            </select>
-            <label class="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg px-3 h-9">
-                <input type="checkbox" id="only-shortages" class="accent-primary-600 w-3.5 h-3.5" onchange="applyFilter('onlyShortages', this.checked)">
-                <span class="text-xs font-bold text-slate-600">النواقص فقط</span>
-            </label>
-            <button onclick="resetFilters()" class="btn btn-secondary h-9 px-3">
-                <i class="fa-solid fa-rotate-left"></i>
-            </button>
-            <button onclick="exportComparisonExcel()" class="btn btn-primary h-9 px-4">
-                <i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">تصدير Excel</span>
-            </button>
+            <!-- Quantity Filter Row -->
+            <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+                <span class="text-[11px] font-black text-slate-500 whitespace-nowrap flex items-center gap-1">
+                    <i class="fa-solid fa-filter text-primary-400"></i> فلتر الكمية الحالية:
+                </span>
+                <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
+                    <span class="text-xs text-slate-500 font-bold">≤</span>
+                    <input type="number" id="max-qty-input" class="w-16 text-center text-xs font-bold border-none outline-none bg-transparent text-slate-700"
+                        placeholder="الكمية" min="0" step="1"
+                        oninput="applyFilter('maxQty', this.value)"
+                        title="أدخل حداً أقصى للكمية — يُعرض فقط الأصناف بكمية أقل من أو تساوي هذا الرقم">
+                </div>
+                <span class="text-[10px] text-slate-400">اكتب رقماً لعرض الأصناف بكمية ≤ هذا الرقم</span>
+                <div class="flex gap-1 mr-auto">
+                    <button onclick="setMaxQty(0)"  class="btn btn-danger   text-[10px] px-2 py-1 h-7" title="عرض الأصناف المنتهية فقط">🔴 منتهي (0)</button>
+                    <button onclick="setMaxQty(5)"  class="btn btn-secondary text-[10px] px-2 py-1 h-7">≤ 5</button>
+                    <button onclick="setMaxQty(10)" class="btn btn-secondary text-[10px] px-2 py-1 h-7">≤ 10</button>
+                    <button onclick="setMaxQty(20)" class="btn btn-secondary text-[10px] px-2 py-1 h-7">≤ 20</button>
+                    <button onclick="setMaxQty(null)" class="btn btn-secondary text-[10px] px-2 py-1 h-7 text-slate-400">بدون</button>
+                </div>
+            </div>
         </div>
 
         <!-- Results Count -->
-        <div id="results-bar" class="hidden flex items-center justify-between px-1">
+        <div id="results-bar" style="display:none" class="flex items-center justify-between px-1">
             <span class="text-xs text-slate-500 font-bold">
                 عرض <span id="results-count" class="text-primary-600">0</span> صنف
                 <span id="results-filter-label" class="text-slate-400"></span>
@@ -344,7 +367,7 @@ const STORAGE_KEY = 'inv_comparison_periods_v1';
 
 let periods = [];       // [ { id, name, date, items:[{code,name,qty}], uploadedAt } ]
 let results = [];       // analysisResults
-let activeFilters = { search: '', status: 'all', trend: 'all', onlyShortages: false };
+let activeFilters = { search: '', status: 'all', trend: 'all', onlyShortages: false, maxQty: null };
 
 // ================================================================
 // INIT
@@ -394,11 +417,23 @@ function handleFileUpload(evt) {
 
             const items = [];
             for (let i = 1; i < rows.length; i++) {
-                const row  = rows[i];
-                const code = String(row[0] !== undefined ? row[0] : '').trim();
-                const name = String(row[1] !== undefined ? row[1] : '').trim();
-                const qty  = Number(row[2]) || 0;
-                if (code && name) items.push({ code, name, qty });
+                const row = rows[i];
+                // Skip completely empty/missing rows
+                if (!row || !Array.isArray(row) || row.length === 0) continue;
+                if (row.every(cell => cell === undefined || cell === null || String(cell).trim() === '')) continue;
+
+                const rawCode = row[0] !== undefined && row[0] !== null ? row[0] : '';
+                const rawName = row[1] !== undefined && row[1] !== null ? row[1] : '';
+                const rawQty  = row[2] !== undefined && row[2] !== null ? row[2] : 0;
+
+                const code = String(rawCode).trim();
+                const name = String(rawName).trim();
+                // Use code as fallback name so items are NEVER silently dropped if name cell is empty
+                const displayName = name || code;
+                const qty  = parseFloat(String(rawQty).replace(/[^\d.\-]/g, '')) || 0;
+
+                if (!code) continue; // only skip if code is truly empty
+                items.push({ code, name: displayName, qty });
             }
 
             if (items.length === 0) {
@@ -439,7 +474,11 @@ function handleFileUpload(evt) {
 // PERIODS MANAGEMENT
 // ================================================================
 function savePeriods() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(periods));
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(periods));
+    } catch (e) {
+        showToast('⚠️ تحذير: مساحة التخزين ممتلئة — قد لا يتم حفظ البيانات. جرّب حذف فترات قديمة.', 'error');
+    }
 }
 
 function deletePeriod(id) {
@@ -641,7 +680,7 @@ function renderTable() {
             <th class="p-3 text-center text-slate-300 font-normal" colspan="10">— ارفع فترتين على الأقل لبدء المقارنة —</th>`;
         emptyState.classList.remove('hidden');
         noResults.classList.add('hidden');
-        resultsBar.classList.add('hidden');
+        resultsBar.style.display = 'none';
         return;
     }
 
@@ -671,23 +710,27 @@ function renderTable() {
     const statusFilter  = activeFilters.status;
     const trendFilter   = activeFilters.trend;
     const onlyShortages = activeFilters.onlyShortages;
+    const maxQty        = activeFilters.maxQty;
 
     const filtered = results.filter(r => {
         if (search && !r.name.toLowerCase().includes(search) && !r.code.toLowerCase().includes(search)) return false;
         if (statusFilter !== 'all' && r.status !== statusFilter) return false;
         if (trendFilter  !== 'all' && r.trend  !== trendFilter)  return false;
         if (onlyShortages && (r.status === 'ok' || r.status === 'new')) return false;
+        // User-defined quantity filter: show items where current qty ≤ maxQty
+        if (maxQty !== null && !isNaN(maxQty) && r.latestQty > maxQty) return false;
         return true;
     });
 
     setText('results-count', filtered.length);
-    resultsBar.classList.remove('hidden');
+    resultsBar.style.display = 'flex';
 
     // Filter label
     const filterParts = [];
     if (statusFilter !== 'all') filterParts.push(`الحالة: ${statusFilter}`);
     if (trendFilter  !== 'all') filterParts.push(`الاتجاه: ${trendFilter}`);
     if (onlyShortages)          filterParts.push('النواقص فقط');
+    if (maxQty !== null && !isNaN(maxQty)) filterParts.push(`الكمية ≤ ${maxQty}`);
     if (search)                 filterParts.push(`بحث: "${search}"`);
     document.getElementById('results-filter-label').textContent =
         filterParts.length ? ` (${filterParts.join(' | ')})` : '';
@@ -753,24 +796,38 @@ function renderTable() {
 // FILTERS
 // ================================================================
 function applyFilter(type, value) {
-    if (type === 'search')       activeFilters.search       = (value || '').trim();
-    if (type === 'status')       { activeFilters.status     = value; document.getElementById('status-filter').value = value; }
-    if (type === 'trend')        activeFilters.trend        = value;
+    if (type === 'search')        activeFilters.search        = (value || '').trim();
+    if (type === 'status')        { activeFilters.status      = value; document.getElementById('status-filter').value = value; }
+    if (type === 'trend')         activeFilters.trend         = value;
     if (type === 'onlyShortages') activeFilters.onlyShortages = value;
+    if (type === 'maxQty') {
+        const n = value === '' || value === null ? null : parseFloat(value);
+        activeFilters.maxQty = (n !== null && !isNaN(n)) ? n : null;
+        const inp = document.getElementById('max-qty-input');
+        if (inp && value === null) inp.value = '';
+    }
+    renderTable();
+}
+
+function setMaxQty(val) {
+    activeFilters.maxQty = val;
+    const inp = document.getElementById('max-qty-input');
+    if (inp) inp.value = val !== null ? val : '';
     renderTable();
 }
 
 function resetFilters() {
-    activeFilters = { search: '', status: 'all', trend: 'all', onlyShortages: false };
-    document.getElementById('search-input').value   = '';
-    document.getElementById('status-filter').value  = 'all';
-    document.getElementById('trend-filter').value   = 'all';
+    activeFilters = { search: '', status: 'all', trend: 'all', onlyShortages: false, maxQty: null };
+    document.getElementById('search-input').value     = '';
+    document.getElementById('status-filter').value    = 'all';
+    document.getElementById('trend-filter').value     = 'all';
     document.getElementById('only-shortages').checked = false;
+    document.getElementById('max-qty-input').value    = '';
     renderTable();
 }
 
 // ================================================================
-// PROFESSIONAL EXCEL EXPORT (5 SHEETS)
+// PROFESSIONAL EXCEL EXPORT (5 SHEETS) — exports the currently filtered view
 // ================================================================
 function exportComparisonExcel() {
     if (periods.length < 2 || results.length === 0) {
@@ -778,23 +835,54 @@ function exportComparisonExcel() {
         return;
     }
 
+    // Apply same filter logic used in renderTable to get the currently visible rows
+    const search        = activeFilters.search.toLowerCase();
+    const statusFilter  = activeFilters.status;
+    const trendFilter   = activeFilters.trend;
+    const onlyShortages = activeFilters.onlyShortages;
+    const maxQty        = activeFilters.maxQty;
+
+    const exportRows = results.filter(r => {
+        if (search && !r.name.toLowerCase().includes(search) && !r.code.toLowerCase().includes(search)) return false;
+        if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+        if (trendFilter  !== 'all' && r.trend  !== trendFilter)  return false;
+        if (onlyShortages && (r.status === 'ok' || r.status === 'new')) return false;
+        if (maxQty !== null && !isNaN(maxQty) && r.latestQty > maxQty) return false;
+        return true;
+    });
+
+    if (exportRows.length === 0) {
+        showToast('⚠️ لا توجد بيانات مطابقة للتصدير بعد تطبيق الفلاتر', 'error');
+        return;
+    }
+
     const wb  = XLSX.utils.book_new();
     const now = new Date();
     const dateStr = now.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    const critical    = results.filter(r => r.status === 'critical');
-    const medium      = results.filter(r => r.status === 'medium');
-    const normalItems = results.filter(r => r.status === 'normal');
-    const ok          = results.filter(r => r.status === 'ok');
-    const newItems    = results.filter(r => r.status === 'new');
-    const needOrder   = results.filter(r => r.suggestedOrder > 0);
-    const totalSugg   = results.reduce((s, r) => s + r.suggestedOrder, 0);
+    const critical    = exportRows.filter(r => r.status === 'critical');
+    const medium      = exportRows.filter(r => r.status === 'medium');
+    const normalItems = exportRows.filter(r => r.status === 'normal');
+    const ok          = exportRows.filter(r => r.status === 'ok');
+    const newItems    = exportRows.filter(r => r.status === 'new');
+    const needOrder   = exportRows.filter(r => r.suggestedOrder > 0);
+    const totalSugg   = exportRows.reduce((s, r) => s + r.suggestedOrder, 0);
+
+    // Build active filter description for the report
+    const filterDesc = [];
+    if (statusFilter !== 'all') filterDesc.push(`الحالة: ${statusFilter}`);
+    if (trendFilter  !== 'all') filterDesc.push(`الاتجاه: ${trendFilter}`);
+    if (onlyShortages)          filterDesc.push('النواقص فقط');
+    if (maxQty !== null && !isNaN(maxQty)) filterDesc.push(`الكمية الحالية ≤ ${maxQty}`);
+    if (search)                 filterDesc.push(`بحث: "${search}"`);
+    const filterLine = filterDesc.length ? filterDesc.join(' | ') : 'بدون فلاتر (جميع الأصناف)';
 
     // ── ورقة 1: ملخص التقرير ──────────────────────────────────
     const ws1aoa = [
         ['تقرير مقارنة المخزون وتحليل النواقص'],
         [`تاريخ إصدار التقرير: ${dateStr}`],
         [`عدد الفترات المقارنة: ${periods.length}`],
+        [`الفلاتر المطبقة: ${filterLine}`],
         [`تطوير: أحمد الطيب`],
         [],
         ['الفترات المستخدمة في التحليل'],
@@ -807,24 +895,24 @@ function exportComparisonExcel() {
             i === periods.length - 1 ? 'آخر فترة (الحالية)' : `فترة ${i + 1} (سابقة)`
         ]),
         [],
-        ['إحصاءات النتائج'],
-        ['الفئة', 'العدد', 'النسبة من الإجمالي', 'الوصف'],
-        ['إجمالي الأصناف المحللة',    results.length,    '100%',                                                                     ''],
-        ['🔴 نواقص حرجة',            critical.length,   pct(critical.length,    results.length),  'نقص ≥ 50% أو نفاد المخزون — تدخل عاجل'],
-        ['🟡 نواقص متوسطة',          medium.length,     pct(medium.length,      results.length),  'نقص 25–49% — متابعة قريبة'],
-        ['🟢 نواقص عادية',           normalItems.length,pct(normalItems.length, results.length),  'نقص < 25% — مقبول'],
-        ['✅ كميات مرتفعة',          ok.length,         pct(ok.length,          results.length),  'لا تحتاج طلب حالياً'],
-        ['🔵 أصناف جديدة',           newItems.length,   pct(newItems.length,    results.length),  'لا توجد فترات سابقة للمقارنة'],
+        ['إحصاءات الأصناف المُصدَّرة (بعد تطبيق الفلاتر)'],
+        ['الفئة', 'العدد', 'النسبة', 'الوصف'],
+        ['إجمالي الأصناف المُصدَّرة',  exportRows.length, '100%',                                             ''],
+        ['🔴 نواقص حرجة',             critical.length,   pct(critical.length,    exportRows.length), 'نقص ≥ 50% أو نفاد المخزون — تدخل عاجل'],
+        ['🟡 نواقص متوسطة',           medium.length,     pct(medium.length,      exportRows.length), 'نقص 25–49% — متابعة قريبة'],
+        ['🟢 نواقص عادية',            normalItems.length,pct(normalItems.length, exportRows.length), 'نقص < 25% — مقبول'],
+        ['✅ كميات مرتفعة',           ok.length,         pct(ok.length,          exportRows.length), 'لا تحتاج طلب حالياً'],
+        ['🔵 أصناف جديدة',            newItems.length,   pct(newItems.length,    exportRows.length), 'لا توجد فترات سابقة للمقارنة'],
         [],
         ['ملخص الطلبات المقترحة'],
-        ['عدد الأصناف التي تحتاج طلبًا',   needOrder.length, '', ''],
-        ['إجمالي الكميات المقترحة للطلب',  totalSugg,        '', ''],
+        ['عدد الأصناف التي تحتاج طلبًا',  needOrder.length, '', ''],
+        ['إجمالي الكميات المقترحة للطلب', totalSugg,        '', ''],
     ];
     const ws1 = XLSX.utils.aoa_to_sheet(ws1aoa);
     ws1['!cols'] = [{ wch: 35 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 30 }];
     XLSX.utils.book_append_sheet(wb, ws1, 'ملخص التقرير');
 
-    // ── ورقة 2: مقارنة تفصيلية كاملة ────────────────────────
+    // ── ورقة 2: مقارنة تفصيلية (الصفوف المرئية) ────────────────
     const detailHeaders = [
         'الكود', 'اسم الصنف',
         ...periods.map((p, i) => `ف${i + 1}: ${p.name} (${formatDate(p.date)})`),
@@ -832,7 +920,7 @@ function exportComparisonExcel() {
         'التغيير في الكمية', 'نسبة التغيير%',
         'اتجاه الصنف', 'حالة النقص', 'الكمية المقترحة للطلب'
     ];
-    const detailRows = results.map(r => {
+    const detailData = exportRows.map(r => {
         const trendTxt = r.trend === 'up' ? 'ارتفاع' : r.trend === 'down' ? 'انخفاض' : 'ثابت';
         return [
             r.code, r.name,
@@ -846,7 +934,7 @@ function exportComparisonExcel() {
             r.suggestedOrder
         ];
     });
-    const ws2 = XLSX.utils.aoa_to_sheet([detailHeaders, ...detailRows]);
+    const ws2 = XLSX.utils.aoa_to_sheet([detailHeaders, ...detailData]);
     ws2['!cols'] = [
         { wch: 14 }, { wch: 30 },
         ...periods.map(() => ({ wch: 22 })),
@@ -859,9 +947,9 @@ function exportComparisonExcel() {
         const h3 = ['م', 'الكود', 'اسم الصنف', 'الكمية الحالية', 'متوسط الكميات السابقة', 'أعلى كمية سابقة', 'نسبة النقص%', 'الكمية المقترحة', 'ملاحظة الحالة'];
         const r3 = critical.map((r, i) => {
             let note = '';
-            if (!r.isInLatest || r.latestAbsent) note = 'غير موجود في آخر فترة — طلب عاجل';
-            else if (r.latestQty === 0)          note = 'نفاد المخزون — طلب عاجل';
-            else                                  note = 'نقص حاد ≥ 50% — طلب عاجل';
+            if (r.latestAbsent)     note = 'غير موجود في آخر فترة — طلب عاجل';
+            else if (r.latestQty === 0) note = 'نفاد المخزون — طلب عاجل';
+            else                    note = 'نقص حاد ≥ 50% — طلب عاجل';
             return [
                 i + 1, r.code, r.name,
                 r.latestAbsent ? 0 : r.latestQty,
@@ -877,13 +965,13 @@ function exportComparisonExcel() {
         XLSX.utils.book_append_sheet(wb, ws3, '🔴 النواقص الحرجة');
     }
 
-    // ── ورقة 4: قائمة الطلبات المقترحة ──────────────────────
+    // ── ورقة 4: قائمة الطلبات المقترحة (جميع الأصناف المرئية التي تحتاج طلباً) ──
     if (needOrder.length > 0) {
         const PRIO = { critical: 0, medium: 1, normal: 2 };
-        const sorted = [...needOrder].sort((a, b) => (PRIO[a.status] ?? 9) - (PRIO[b.status] ?? 9));
+        const sorted4 = [...needOrder].sort((a, b) => (PRIO[a.status] ?? 9) - (PRIO[b.status] ?? 9));
 
         const h4 = ['م', 'الكود', 'اسم الصنف', 'الأولوية', 'الكمية الحالية', 'متوسط الكميات السابقة', 'الكمية المقترحة للطلب', 'التصرف المطلوب'];
-        const r4 = sorted.map((r, i) => [
+        const r4 = sorted4.map((r, i) => [
             i + 1, r.code, r.name,
             r.statusLabel,
             r.latestAbsent ? 0 : r.latestQty,
@@ -902,7 +990,7 @@ function exportComparisonExcel() {
         ...periods.map((p, i) => `ف${i + 1}: ${p.name}`),
         'أعلى كمية', 'أدنى كمية', 'متوسط الكميات', 'اتجاه الحركة', 'حالة الصنف'
     ];
-    const r5 = results.map(r => {
+    const r5 = exportRows.map(r => {
         const validQtys = r.periodQtys.filter(q => q !== null);
         const maxQ = validQtys.length ? Math.max(...validQtys) : 0;
         const minQ = validQtys.length ? Math.min(...validQtys) : 0;
@@ -922,9 +1010,10 @@ function exportComparisonExcel() {
     ];
     XLSX.utils.book_append_sheet(wb, ws5, 'حركة الأصناف');
 
-    const fileName = `تقرير_مقارنة_المخزون_${now.toISOString().split('T')[0]}.xlsx`;
+    const filterSuffix = filterDesc.length ? `_مُفلتر` : '';
+    const fileName = `تقرير_مخزون_${now.toISOString().split('T')[0]}${filterSuffix}.xlsx`;
     XLSX.writeFile(wb, fileName);
-    showToast('✅ تم تصدير التقرير الاحترافي بنجاح');
+    showToast(`✅ تم تصدير ${exportRows.length} صنف بنجاح`);
 }
 
 // ================================================================
