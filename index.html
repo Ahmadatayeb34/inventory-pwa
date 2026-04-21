@@ -880,7 +880,8 @@
                         <ul class="text-[10px] text-slate-400 space-y-1 list-disc list-inside">
                             <li>العمود A: كود الصنف</li>
                             <li>العمود B: اسم الصنف</li>
-                            <li>العمود C: الكمية</li>
+                            <li>العمود C: مجموعة الصنف (اختياري في الملف الجديد)</li>
+                            <li>العمود D: الكمية (أو العمود C في الملف القديم)</li>
                             <li>السطر الأول: رؤوس أعمدة (يُتجاهل)</li>
                             <li>ارفع الفترات من الأقدم للأحدث</li>
                             <li>آخر فترة مرفوعة تُعتبر الحالية</li>
@@ -2409,6 +2410,7 @@
                     const name  = String(rawName).trim();
                     const group = String(rawGroup).trim() || 'غير محددة';
                     const displayName = name || `غير مُسمّى (${code})`;
+                    if (!name) console.warn(`Comparison import: missing item name for code "${code}"`);
                     const qty   = parseFloat(String(rawQty).replace(/[^\d.\-]/g, '')) || 0;
 
                     if (!code) continue;
