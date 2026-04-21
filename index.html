@@ -2394,10 +2394,25 @@
                 const items = [];
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i];
-                    const code = String(row[0] !== undefined ? row[0] : '').trim();
-                    const name = String(row[1] !== undefined ? row[1] : '').trim();
-                    const qty  = Number(row[2]) || 0;
-                    if (code && name) items.push({ code, name, qty });
+                    if (!row || !Array.isArray(row) || row.length === 0) continue;
+                    if (row.every(cell => cell === undefined || cell === null || String(cell).trim() === '')) continue;
+
+                    const isNewFormat = row.length >= 4;
+                    const rawCode  = row[0] !== undefined && row[0] !== null ? row[0] : '';
+                    const rawName  = row[1] !== undefined && row[1] !== null ? row[1] : '';
+                    const rawGroup = isNewFormat && row[2] !== undefined && row[2] !== null ? row[2] : '';
+                    const rawQty   = isNewFormat
+                        ? (row[3] !== undefined && row[3] !== null ? row[3] : 0)
+                        : (row[2] !== undefined && row[2] !== null ? row[2] : 0);
+
+                    const code  = String(rawCode).trim();
+                    const name  = String(rawName).trim();
+                    const group = String(rawGroup).trim() || 'غير محددة';
+                    const displayName = name || `غير مُسمّى (${code})`;
+                    const qty   = parseFloat(String(rawQty).replace(/[^\d.\-]/g, '')) || 0;
+
+                    if (!code) continue;
+                    items.push({ code, name: displayName, group, qty });
                 }
 
                 if (items.length === 0) {

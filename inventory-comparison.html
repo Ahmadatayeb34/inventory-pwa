@@ -435,8 +435,8 @@ function handleFileUpload(evt) {
                 const code = String(rawCode).trim();
                 const name = String(rawName).trim();
                 const group = String(rawGroup).trim() || 'غير محددة';
-                // Use code as fallback name so items are NEVER silently dropped if name cell is empty
-                const displayName = name || code;
+                // Use a clear fallback label so items are not dropped silently when name is empty
+                const displayName = name || `غير مُسمّى (${code})`;
                 const qty  = parseFloat(String(rawQty).replace(/[^\d.\-]/g, '')) || 0;
 
                 if (!code) continue; // only skip if code is truly empty
