@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام مقارنة المخزون وتحليل النواقص - تطوير أحمد الطيب</title>
+    <link rel="manifest" href="manifest-comparison.json">
+    <meta name="theme-color" content="#1e1b4b">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Cairo Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] },
+                    colors: {
+                        primary:   { 900: '#1e1b4b', 800: '#312e81', 700: '#3730a3', 600: '#4f46e5', 500: '#6366f1', 100: '#e0e7ff', 50: '#eef2ff' },
+                        critical:  { 700: '#b91c1c', 600: '#dc2626', 100: '#fee2e2', 50: '#fef2f2' },
+                        medium:    { 700: '#b45309', 600: '#d97706', 100: '#fef3c7', 50: '#fffbeb' },
+                        normal:    { 700: '#0369a1', 600: '#0284c7', 100: '#e0f2fe', 50: '#f0f9ff' },
+                        success:   { 700: '#15803d', 600: '#16a34a', 100: '#dcfce7', 50: '#f0fdf4' },
+                        info:      { 700: '#1d4ed8', 600: '#2563eb', 100: '#dbeafe', 50: '#eff6ff' },
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Cairo', sans-serif; background: #f1f5f9; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .card { background: #fff; border-radius: 1rem; border: 1px solid #e2e8f0; }
+        .card-hover { transition: all .2s; }
+        .card-hover:hover { box-shadow: 0 10px 30px rgba(79,70,229,.12); border-color: #6366f1; transform: translateY(-2px); }
+
+        .btn-primary   { background: #4f46e5; color: #fff; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-danger    { background: #fee2e2; color: #dc2626; }
+        .btn-danger:hover { background: #fecaca; }
+        .btn-success   { background: #dcfce7; color: #16a34a; }
+        .btn-success:hover { background: #bbf7d0; }
+
+        .btn { display:inline-flex; align-items:center; gap:.4rem; padding:.45rem 1rem; border-radius:.6rem; font-weight:700; font-size:.75rem; cursor:pointer; border:none; outline:none; transition:all .15s; white-space:nowrap; }
+        .btn:active { transform:scale(.96); }
+
+        .stat-card { border-radius:.875rem; padding:1rem; text-align:center; cursor:pointer; transition:all .2s; border: 1px solid transparent; }
+        .stat-card:hover { transform:translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+
+        .badge { display:inline-flex; align-items:center; padding:.15rem .55rem; border-radius:9999px; font-size:.65rem; font-weight:700; white-space:nowrap; }
+        .badge-critical { background:#fee2e2; color:#b91c1c; }
+        .badge-medium   { background:#fef3c7; color:#b45309; }
+        .badge-normal   { background:#e0f2fe; color:#0369a1; }
+        .badge-ok       { background:#dcfce7; color:#15803d; }
+        .badge-new      { background:#dbeafe; color:#1d4ed8; }
+
+        .trend-up   { color: #16a34a; }
+        .trend-down { color: #dc2626; }
+        .trend-flat { color: #94a3b8; }
+
+        .row-critical { background: #fef2f2; }
+        .row-critical:hover { background: #fee2e2; }
+        .row-medium   { background: #fffbeb; }
+        .row-medium:hover   { background: #fef3c7; }
+        .row-normal   { background: #f0f9ff; }
+        .row-normal:hover   { background: #e0f2fe; }
+        .row-ok       { background: #fff; }
+        .row-ok:hover       { background: #f8fafc; }
+
+        .period-tag-latest { background:#4f46e5; color:#fff; font-size:.6rem; padding:.1rem .4rem; border-radius:9999px; font-weight:700; }
+        .period-tag-old    { background:#e2e8f0; color:#64748b; font-size:.6rem; padding:.1rem .4rem; border-radius:9999px; font-weight:700; }
+
+        .input-field { width:100%; border:1px solid #e2e8f0; border-radius:.6rem; padding:.45rem .75rem; font-size:.8rem; font-family:'Cairo',sans-serif; outline:none; transition:border-color .15s; }
+        .input-field:focus { border-color:#6366f1; }
+
+        .divider { height:1px; background:#f1f5f9; margin:.75rem 0; }
+
+        /* Upload zone */
+        .upload-zone { border: 2px dashed #c7d2fe; background: #eef2ff; border-radius:.875rem; padding:1.25rem; text-align:center; cursor:pointer; transition:all .2s; }
+        .upload-zone:hover { border-color:#4f46e5; background:#e0e7ff; }
+
+        /* Sticky header */
+        .sticky-header th { position:sticky; top:0; background:#f8fafc; z-index:10; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+
+        /* Sticky first 2 cols */
+        .sticky-col-1 { position:sticky; right:0;   background:inherit; z-index:5; }
+        .sticky-col-2 { position:sticky; right:90px; background:inherit; z-index:5; }
+
+        /* Pulse animation for new upload */
+        @keyframes pulse-green { 0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.4)} 50%{box-shadow:0 0 0 6px rgba(22,163,74,0)} }
+        .pulse-success { animation: pulse-green .6s ease-out; }
+
+        /* Toast */
+        #toast { transition: opacity .3s, bottom .3s; }
+
+        @media print {
+            * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
+            .no-print { display:none!important; }
+            body { background:#fff!important; }
+            .card { box-shadow:none!important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ===== HEADER ===== -->
+<header class="bg-primary-900 text-white shadow-lg no-print sticky top-0 z-50">
+    <div class="max-w-screen-2xl mx-auto flex items-center justify-between px-4 py-3 gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-yellow-400 flex-shrink-0">
+                <i class="fa-solid fa-chart-bar text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-black leading-none">نظام مقارنة المخزون وتحليل النواقص</h1>
+                <span class="text-[10px] text-slate-400 font-bold">تطوير أحمد الطيب &bull; نسخة 1.0</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="exportComparisonExcel()" class="btn btn-success text-xs hidden sm:inline-flex" id="export-btn-header">
+                <i class="fa-solid fa-file-excel"></i> تصدير التقرير
+            </button>
+            <button onclick="clearAllData()" class="btn btn-danger text-xs">
+                <i class="fa-solid fa-trash"></i> <span class="hidden sm:inline">حذف الكل</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- ===== MAIN LAYOUT ===== -->
+<div class="max-w-screen-2xl mx-auto flex flex-col lg:flex-row gap-4 p-4 min-h-[calc(100vh-64px)]">
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="w-full lg:w-[340px] flex-shrink-0 flex flex-col gap-4 no-print">
+
+        <!-- Upload Card -->
+        <div class="card p-5">
+            <h2 class="text-sm font-black text-primary-900 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-cloud-arrow-up text-primary-600"></i>
+                رفع فترة جرد جديدة
+            </h2>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">اسم الفترة <span class="text-red-400">*</span></label>
+                    <input id="period-name" class="input-field" type="text" placeholder="مثال: جرد يناير 2025">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">تاريخ الفترة <span class="text-red-400">*</span></label>
+                    <input id="period-date" class="input-field" type="date">
+                </div>
+                <div class="divider"></div>
+                <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+                    <i class="fa-solid fa-file-excel text-3xl text-primary-400 mb-2 block"></i>
+                    <p class="text-xs font-bold text-slate-500">اضغط لاختيار ملف Excel</p>
+                    <p class="text-[10px] text-slate-400 mt-1">صيغة: A=كود | B=اسم | C=كمية</p>
+                    <p class="text-[10px] text-slate-400">السطر الأول رؤوس أعمدة (يُتجاهل)</p>
+                </div>
+                <input type="file" id="file-input" class="hidden" accept=".xlsx,.xls" onchange="handleFileUpload(event)">
+                <button class="btn btn-primary w-full justify-center py-2.5" onclick="document.getElementById('file-input').click()">
+                    <i class="fa-solid fa-upload"></i> اختر ملف Excel ورفع
+                </button>
+            </div>
+        </div>
+
+        <!-- Periods List Card -->
+        <div class="card p-5 flex-1">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-black text-primary-900 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-primary-600"></i>
+                    الفترات المحملة
+                    <span id="periods-count-badge" class="text-[10px] bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded-full font-bold">0</span>
+                </h2>
+                <button onclick="clearAllPeriods()" class="text-[10px] text-red-400 hover:text-red-600 font-bold transition flex items-center gap-1">
+                    <i class="fa-solid fa-trash"></i> حذف الكل
+                </button>
+            </div>
+
+            <div id="periods-list">
+                <div class="text-center py-8 text-slate-300">
+                    <i class="fa-solid fa-calendar-xmark text-3xl mb-2 block"></i>
+                    <p class="text-sm font-medium">لا توجد فترات محملة</p>
+                    <p class="text-xs mt-1">ارفع فترتين على الأقل للبدء</p>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="bg-primary-50 rounded-xl p-3 border border-primary-100">
+                <p class="text-[10px] font-bold text-primary-700 mb-2"><i class="fa-solid fa-circle-info"></i> تعليمات:</p>
+                <ul class="text-[10px] text-slate-500 space-y-1 list-disc list-inside leading-relaxed">
+                    <li>ارفع الفترات من <strong>الأقدم للأحدث</strong></li>
+                    <li>آخر فترة مرفوعة تُعتبر <strong>الفترة الحالية</strong></li>
+                    <li>الحد الأدنى: <strong>فترتان</strong> للتحليل</li>
+                    <li>العمود A: كود الصنف</li>
+                    <li>العمود B: اسم الصنف</li>
+                    <li>العمود C: الكمية</li>
+                </ul>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="flex-1 flex flex-col gap-4 min-w-0">
+
+        <!-- Summary Cards Row -->
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            <div class="stat-card bg-white border-slate-200" onclick="applyFilter('status','all')" id="stat-total">
+                <div class="text-2xl font-black text-slate-700" id="cnt-total">0</div>
+                <div class="text-[10px] text-slate-400 font-bold mt-0.5">إجمالي</div>
+            </div>
+            <div class="stat-card bg-critical-50 border border-critical-100" onclick="applyFilter('status','critical')" id="stat-critical">
+                <div class="text-2xl font-black text-critical-600" id="cnt-critical">0</div>
+                <div class="text-[10px] text-critical-500 font-bold mt-0.5">🔴 حرج</div>
+            </div>
+            <div class="stat-card bg-medium-50 border border-medium-100" onclick="applyFilter('status','medium')" id="stat-medium">
+                <div class="text-2xl font-black text-medium-600" id="cnt-medium">0</div>
+                <div class="text-[10px] text-medium-500 font-bold mt-0.5">🟡 وسط</div>
+            </div>
+            <div class="stat-card bg-normal-50 border border-normal-100" onclick="applyFilter('status','normal')" id="stat-normal">
+                <div class="text-2xl font-black text-normal-600" id="cnt-normal">0</div>
+                <div class="text-[10px] text-normal-500 font-bold mt-0.5">🟢 عادي</div>
+            </div>
+            <div class="stat-card bg-success-50 border border-success-100" onclick="applyFilter('status','ok')" id="stat-ok">
+                <div class="text-2xl font-black text-success-600" id="cnt-ok">0</div>
+                <div class="text-[10px] text-success-500 font-bold mt-0.5">✅ مرتفع</div>
+            </div>
+            <div class="stat-card bg-info-50 border border-info-100" onclick="applyFilter('status','new')" id="stat-new">
+                <div class="text-2xl font-black text-info-600" id="cnt-new">0</div>
+                <div class="text-[10px] text-info-500 font-bold mt-0.5">🔵 جديد</div>
+            </div>
+        </div>
+
+        <!-- Filters Bar -->
+        <div class="card p-3 flex flex-wrap gap-2 items-center no-print">
+            <div class="relative flex-1 min-w-[150px]">
+                <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="search-input" class="input-field pr-8" placeholder="بحث باسم الصنف أو الكود..."
+                    oninput="applyFilter('search', this.value)">
+            </div>
+            <select id="status-filter" class="input-field w-auto" onchange="applyFilter('status', this.value)">
+                <option value="all">جميع الحالات</option>
+                <option value="critical">🔴 حرج فقط</option>
+                <option value="medium">🟡 وسط فقط</option>
+                <option value="normal">🟢 عادي فقط</option>
+                <option value="ok">✅ مرتفع فقط</option>
+                <option value="new">🔵 جديد فقط</option>
+            </select>
+            <select id="trend-filter" class="input-field w-auto" onchange="applyFilter('trend', this.value)">
+                <option value="all">جميع الاتجاهات</option>
+                <option value="down">📉 انخفاض</option>
+                <option value="up">📈 ارتفاع</option>
+                <option value="stable">➡️ ثابت</option>
+            </select>
+            <label class="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg px-3 h-9">
+                <input type="checkbox" id="only-shortages" class="accent-primary-600 w-3.5 h-3.5" onchange="applyFilter('onlyShortages', this.checked)">
+                <span class="text-xs font-bold text-slate-600">النواقص فقط</span>
+            </label>
+            <button onclick="resetFilters()" class="btn btn-secondary h-9 px-3">
+                <i class="fa-solid fa-rotate-left"></i>
+            </button>
+            <button onclick="exportComparisonExcel()" class="btn btn-primary h-9 px-4">
+                <i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">تصدير Excel</span>
+            </button>
+        </div>
+
+        <!-- Results Count -->
+        <div id="results-bar" class="hidden flex items-center justify-between px-1">
+            <span class="text-xs text-slate-500 font-bold">
+                عرض <span id="results-count" class="text-primary-600">0</span> صنف
+                <span id="results-filter-label" class="text-slate-400"></span>
+            </span>
+            <span class="text-xs text-slate-400" id="last-analysis-time"></span>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="card flex-1 overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-slate-100 bg-gradient-to-l from-primary-50 to-white flex items-center justify-between flex-shrink-0 no-print">
+                <h3 class="font-black text-primary-900 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-table-list text-primary-600"></i>
+                    جدول المقارنة التفصيلي
+                </h3>
+                <div class="flex items-center gap-3 text-[10px] text-slate-500">
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-critical-100 border border-critical-200 inline-block"></span>حرج</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-medium-100 border border-medium-200 inline-block"></span>وسط</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-normal-100 border border-normal-200 inline-block"></span>عادي</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-white border border-slate-200 inline-block"></span>مرتفع</span>
+                </div>
+            </div>
+            <div class="flex-1 overflow-auto">
+                <table class="w-full text-right text-xs border-collapse" style="min-width:720px;">
+                    <thead class="sticky-header text-slate-500 font-bold" id="table-head">
+                        <tr id="thead-row">
+                            <th class="sticky-col-1 p-3 w-24 text-right">الكود</th>
+                            <th class="sticky-col-2 p-3 text-right min-w-[180px]">اسم الصنف</th>
+                            <th class="p-3 text-center text-slate-300 font-normal" colspan="10">— ارفع فترتين على الأقل لبدء المقارنة —</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="flex flex-col items-center justify-center py-20 text-slate-300">
+                    <i class="fa-solid fa-chart-gantt text-5xl mb-4 text-primary-200"></i>
+                    <p class="font-bold text-slate-400 text-lg">لا توجد بيانات للمقارنة بعد</p>
+                    <p class="text-sm text-slate-400 mt-1">ارفع فترتين على الأقل من القائمة الجانبية</p>
+                </div>
+
+                <!-- No Results State -->
+                <div id="no-results-state" class="hidden flex flex-col items-center justify-center py-16 text-slate-300">
+                    <i class="fa-solid fa-filter-circle-xmark text-4xl mb-3 text-slate-200"></i>
+                    <p class="font-bold text-slate-400">لا توجد نتائج مطابقة</p>
+                    <button onclick="resetFilters()" class="btn btn-secondary mt-3 text-xs">إعادة ضبط الفلاتر</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl font-bold text-sm opacity-0 pointer-events-none z-[200]">
+    تمت العملية
+</div>
+
+<script>
+// ================================================================
+// DATA STATE
+// ================================================================
+const STORAGE_KEY = 'inv_comparison_periods_v1';
+
+let periods = [];       // [ { id, name, date, items:[{code,name,qty}], uploadedAt } ]
+let results = [];       // analysisResults
+let activeFilters = { search: '', status: 'all', trend: 'all', onlyShortages: false };
+
+// ================================================================
+// INIT
+// ================================================================
+function init() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+        try { periods = JSON.parse(stored); } catch(e) { periods = []; }
+    }
+    if (!Array.isArray(periods)) periods = [];
+
+    // Set today's date in the date input
+    document.getElementById('period-date').valueAsDate = new Date();
+
+    renderPeriodsList();
+    runAnalysis();
+}
+
+// ================================================================
+// FILE UPLOAD
+// ================================================================
+function handleFileUpload(evt) {
+    const file = evt.target.files[0];
+    if (!file) return;
+
+    const periodName = document.getElementById('period-name').value.trim();
+    const periodDate = document.getElementById('period-date').value;
+
+    if (!periodName) {
+        showToast('⚠️ أدخل اسم الفترة أولاً', 'error');
+        evt.target.value = '';
+        return;
+    }
+    if (!periodDate) {
+        showToast('⚠️ أدخل تاريخ الفترة أولاً', 'error');
+        evt.target.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data    = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet   = workbook.Sheets[workbook.SheetNames[0]];
+            const rows    = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+            const items = [];
+            for (let i = 1; i < rows.length; i++) {
+                const row  = rows[i];
+                const code = String(row[0] !== undefined ? row[0] : '').trim();
+                const name = String(row[1] !== undefined ? row[1] : '').trim();
+                const qty  = Number(row[2]) || 0;
+                if (code && name) items.push({ code, name, qty });
+            }
+
+            if (items.length === 0) {
+                showToast('⚠️ الملف لا يحتوي على بيانات صالحة', 'error');
+                evt.target.value = '';
+                return;
+            }
+
+            const period = {
+                id: Date.now(),
+                name: periodName,
+                date: periodDate,
+                items,
+                uploadedAt: new Date().toISOString()
+            };
+
+            periods.push(period);
+            // Keep chronological order
+            periods.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            savePeriods();
+            document.getElementById('period-name').value = '';
+            evt.target.value = '';
+
+            renderPeriodsList();
+            runAnalysis();
+            showToast(`✅ تم رفع "${period.name}" — ${items.length} صنف`);
+        } catch(err) {
+            console.error(err);
+            showToast('❌ خطأ في قراءة الملف، تأكد من الصيغة الصحيحة', 'error');
+            evt.target.value = '';
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// ================================================================
+// PERIODS MANAGEMENT
+// ================================================================
+function savePeriods() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(periods));
+}
+
+function deletePeriod(id) {
+    if (!confirm('هل أنت متأكد من حذف هذه الفترة؟')) return;
+    periods = periods.filter(p => p.id !== id);
+    savePeriods();
+    renderPeriodsList();
+    runAnalysis();
+    showToast('تم حذف الفترة');
+}
+
+function clearAllPeriods() {
+    if (periods.length === 0) return;
+    if (!confirm('هل أنت متأكد من حذف جميع الفترات؟ سيتم مسح كل البيانات!')) return;
+    periods = [];
+    results = [];
+    savePeriods();
+    renderPeriodsList();
+    renderTable();
+    updateStats();
+    showToast('تم حذف جميع الفترات');
+}
+
+function clearAllData() {
+    if (!confirm('هل أنت متأكد من حذف جميع البيانات؟ لا يمكن التراجع!')) return;
+    periods = [];
+    results = [];
+    localStorage.removeItem(STORAGE_KEY);
+    renderPeriodsList();
+    renderTable();
+    updateStats();
+    showToast('تم مسح جميع البيانات', 'error');
+}
+
+function renderPeriodsList() {
+    const container = document.getElementById('periods-list');
+    const countBadge = document.getElementById('periods-count-badge');
+    countBadge.textContent = periods.length;
+
+    if (periods.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-slate-300">
+                <i class="fa-solid fa-calendar-xmark text-3xl mb-2 block"></i>
+                <p class="text-sm font-medium">لا توجد فترات محملة</p>
+                <p class="text-xs mt-1">ارفع فترتين على الأقل للبدء</p>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = periods.map((p, idx) => {
+        const isLatest = idx === periods.length - 1;
+        const tag = isLatest
+            ? '<span class="period-tag-latest">آخر فترة</span>'
+            : `<span class="period-tag-old">ف${idx + 1}</span>`;
+        return `
+            <div class="flex items-center gap-2 p-3 rounded-xl mb-2 border ${isLatest ? 'bg-primary-50 border-primary-200' : 'bg-slate-50 border-slate-200'}">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isLatest ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-500'}">
+                    <i class="fa-solid fa-calendar-check text-sm"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center flex-wrap gap-1 mb-0.5">
+                        <span class="text-xs font-bold ${isLatest ? 'text-primary-700' : 'text-slate-700'} truncate">${escHtml(p.name)}</span>
+                        ${tag}
+                    </div>
+                    <div class="text-[10px] text-slate-400">${formatDate(p.date)} &bull; ${p.items.length} صنف</div>
+                </div>
+                <button onclick="deletePeriod(${p.id})" class="text-slate-300 hover:text-red-500 p-1 transition flex-shrink-0" title="حذف">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>`;
+    }).join('');
+}
+
+// ================================================================
+// ANALYSIS ENGINE
+// ================================================================
+function runAnalysis() {
+    if (periods.length < 2) {
+        results = [];
+        renderTable();
+        updateStats();
+        return;
+    }
+
+    // Collect all item codes across all periods
+    const codeMap = new Map(); // code -> latest name
+    periods.forEach(p => {
+        p.items.forEach(item => codeMap.set(item.code, item.name));
+    });
+
+    const SORT_ORDER = { critical: 0, medium: 1, normal: 2, ok: 3, new: 4 };
+    results = [];
+
+    codeMap.forEach((latestName, code) => {
+        // Quantities per period (null = absent)
+        const periodQtys = periods.map(p => {
+            const found = p.items.find(i => i.code === code);
+            return found !== undefined ? found.qty : null;
+        });
+
+        const latestRaw  = periodQtys[periodQtys.length - 1];
+        const latestQty  = latestRaw !== null ? latestRaw : 0;
+        const prevQtys   = periodQtys.slice(0, -1).filter(q => q !== null);
+
+        let status = 'new', statusLabel = 'جديد';
+        let avgPrev = 0, maxPrev = 0, change = 0, changePercent = 0;
+        let suggestedOrder = 0, trend = 'stable';
+
+        if (prevQtys.length > 0) {
+            avgPrev = prevQtys.reduce((a, b) => a + b, 0) / prevQtys.length;
+            maxPrev = Math.max(...prevQtys);
+            change  = latestQty - avgPrev;
+            changePercent = avgPrev > 0 ? (change / avgPrev) * 100 : (latestQty > 0 ? 100 : 0);
+
+            // Trend vs previous period directly
+            let prevPeriodQty = avgPrev;
+            if (periodQtys.length >= 2) {
+                const p2 = periodQtys[periodQtys.length - 2];
+                if (p2 !== null) prevPeriodQty = p2;
+            }
+            if (latestQty > prevPeriodQty * 1.05)       trend = 'up';
+            else if (latestQty < prevPeriodQty * 0.95)  trend = 'down';
+
+            const shortage = avgPrev - latestQty;
+            const shortagePercent = avgPrev > 0 ? (shortage / avgPrev) * 100 : 0;
+
+            if (latestRaw === null || latestQty === 0) {
+                status = 'critical'; statusLabel = 'حرج';
+                suggestedOrder = Math.ceil(maxPrev * 1.2);
+            } else if (shortagePercent >= 50) {
+                status = 'critical'; statusLabel = 'حرج';
+                suggestedOrder = Math.ceil((maxPrev - latestQty) * 1.2);
+            } else if (shortagePercent >= 25) {
+                status = 'medium'; statusLabel = 'وسط';
+                suggestedOrder = Math.ceil((avgPrev - latestQty) * 1.1);
+            } else if (shortage > 0) {
+                status = 'normal'; statusLabel = 'عادي';
+                suggestedOrder = Math.ceil(shortage);
+            } else {
+                status = 'ok'; statusLabel = 'مرتفع';
+                suggestedOrder = 0;
+            }
+        }
+
+        results.push({
+            code, name: latestName, periodQtys, latestQty, latestAbsent: latestRaw === null,
+            avgPrev, maxPrev, change, changePercent,
+            status, statusLabel, suggestedOrder, trend
+        });
+    });
+
+    results.sort((a, b) => {
+        const d = (SORT_ORDER[a.status] ?? 5) - (SORT_ORDER[b.status] ?? 5);
+        return d !== 0 ? d : a.name.localeCompare(b.name, 'ar');
+    });
+
+    document.getElementById('last-analysis-time').textContent =
+        `آخر تحليل: ${new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}`;
+
+    updateStats();
+    renderTable();
+    updateExportBtn();
+}
+
+function updateStats() {
+    const cnt = { total: results.length, critical: 0, medium: 0, normal: 0, ok: 0, new: 0 };
+    results.forEach(r => { if (cnt[r.status] !== undefined) cnt[r.status]++; });
+
+    setText('cnt-total',    cnt.total);
+    setText('cnt-critical', cnt.critical);
+    setText('cnt-medium',   cnt.medium);
+    setText('cnt-normal',   cnt.normal);
+    setText('cnt-ok',       cnt.ok);
+    setText('cnt-new',      cnt.new);
+}
+
+function updateExportBtn() {
+    const btn = document.getElementById('export-btn-header');
+    if (btn) btn.classList.toggle('hidden', results.length === 0);
+}
+
+// ================================================================
+// TABLE RENDERING
+// ================================================================
+function renderTable() {
+    const tbody      = document.getElementById('table-body');
+    const theadRow   = document.getElementById('thead-row');
+    const emptyState = document.getElementById('empty-state');
+    const noResults  = document.getElementById('no-results-state');
+    const resultsBar = document.getElementById('results-bar');
+
+    tbody.innerHTML = '';
+
+    // No periods case
+    if (periods.length < 2) {
+        theadRow.innerHTML = `
+            <th class="sticky-col-1 p-3 w-24 text-right">الكود</th>
+            <th class="sticky-col-2 p-3 text-right min-w-[180px]">اسم الصنف</th>
+            <th class="p-3 text-center text-slate-300 font-normal" colspan="10">— ارفع فترتين على الأقل لبدء المقارنة —</th>`;
+        emptyState.classList.remove('hidden');
+        noResults.classList.add('hidden');
+        resultsBar.classList.add('hidden');
+        return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    // Build dynamic header
+    const periodHeaders = periods.map((p, idx) => {
+        const isLatest = idx === periods.length - 1;
+        return `<th class="p-3 text-center whitespace-nowrap text-[11px] ${isLatest ? 'bg-primary-50 text-primary-700 border-x border-primary-100' : 'text-slate-500'}">
+            <div>${escHtml(p.name)}</div>
+            <div class="font-normal opacity-70 text-[9px]">${formatDate(p.date)}</div>
+        </th>`;
+    }).join('');
+
+    theadRow.innerHTML = `
+        <th class="sticky-col-1 p-3 w-24 text-right">الكود</th>
+        <th class="sticky-col-2 p-3 text-right min-w-[180px]">اسم الصنف</th>
+        ${periodHeaders}
+        <th class="p-3 text-center whitespace-nowrap w-20">التغيير</th>
+        <th class="p-3 text-center whitespace-nowrap w-16">النسبة%</th>
+        <th class="p-3 text-center whitespace-nowrap w-16">الاتجاه</th>
+        <th class="p-3 text-center whitespace-nowrap w-20">الحالة</th>
+        <th class="p-3 text-center whitespace-nowrap w-28">الكمية المقترحة</th>`;
+
+    // Apply filters
+    const search        = activeFilters.search.toLowerCase();
+    const statusFilter  = activeFilters.status;
+    const trendFilter   = activeFilters.trend;
+    const onlyShortages = activeFilters.onlyShortages;
+
+    const filtered = results.filter(r => {
+        if (search && !r.name.toLowerCase().includes(search) && !r.code.toLowerCase().includes(search)) return false;
+        if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+        if (trendFilter  !== 'all' && r.trend  !== trendFilter)  return false;
+        if (onlyShortages && (r.status === 'ok' || r.status === 'new')) return false;
+        return true;
+    });
+
+    setText('results-count', filtered.length);
+    resultsBar.classList.remove('hidden');
+
+    // Filter label
+    const filterParts = [];
+    if (statusFilter !== 'all') filterParts.push(`الحالة: ${statusFilter}`);
+    if (trendFilter  !== 'all') filterParts.push(`الاتجاه: ${trendFilter}`);
+    if (onlyShortages)          filterParts.push('النواقص فقط');
+    if (search)                 filterParts.push(`بحث: "${search}"`);
+    document.getElementById('results-filter-label').textContent =
+        filterParts.length ? ` (${filterParts.join(' | ')})` : '';
+
+    if (filtered.length === 0) {
+        noResults.classList.remove('hidden');
+        return;
+    }
+    noResults.classList.add('hidden');
+
+    filtered.forEach(r => {
+        const trendIcon = r.trend === 'up'
+            ? '<span class="trend-up" title="ارتفاع"><i class="fa-solid fa-arrow-trend-up"></i> ارتفاع</span>'
+            : r.trend === 'down'
+                ? '<span class="trend-down" title="انخفاض"><i class="fa-solid fa-arrow-trend-down"></i> انخفاض</span>'
+                : '<span class="trend-flat"><i class="fa-solid fa-minus"></i></span>';
+
+        const changeClass = r.change > 0 ? 'text-success-600 font-bold' : r.change < 0 ? 'text-critical-600 font-bold' : 'text-slate-400';
+        const changeFmt   = r.change !== 0 ? `${r.change > 0 ? '+' : ''}${r.change.toFixed(1)}` : '0';
+        const pctFmt      = `${r.change > 0 ? '+' : ''}${r.changePercent.toFixed(1)}%`;
+
+        const rowClass = `row-${r.status} transition cursor-default border-b border-slate-100`;
+
+        const periodCells = r.periodQtys.map((q, idx) => {
+            const isLatest = idx === r.periodQtys.length - 1;
+            const display  = q !== null
+                ? `<span class="${isLatest ? 'font-black text-primary-800' : 'font-mono text-slate-600'}">${q}</span>`
+                : '<span class="text-slate-300 text-[10px]">—</span>';
+            return `<td class="p-3 text-center ${isLatest ? 'bg-primary-50/60 border-x border-primary-100/60' : ''}">${display}</td>`;
+        }).join('');
+
+        const badgeClass = { critical:'badge-critical', medium:'badge-medium', normal:'badge-normal', ok:'badge-ok', new:'badge-new' }[r.status] || '';
+        const statusBadge = `<span class="badge ${badgeClass}">${r.statusLabel}</span>`;
+
+        const orderCell = r.suggestedOrder > 0
+            ? `<span class="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 border border-orange-200 rounded-lg text-xs font-black">
+                <i class="fa-solid fa-cart-shopping text-[10px]"></i>${r.suggestedOrder}
+               </span>`
+            : `<span class="text-slate-300">—</span>`;
+
+        const absentNote = r.latestAbsent
+            ? `<div class="text-[9px] text-critical-500 font-bold mt-0.5">غير موجود في الفترة الأخيرة</div>` : '';
+
+        const tr = document.createElement('tr');
+        tr.className = rowClass;
+        tr.innerHTML = `
+            <td class="p-3 font-mono text-slate-500 text-[11px] sticky-col-1" style="background:inherit">${escHtml(r.code)}</td>
+            <td class="p-3 sticky-col-2" style="background:inherit">
+                <div class="font-bold text-slate-800 text-xs">${escHtml(r.name)}</div>
+                ${absentNote}
+            </td>
+            ${periodCells}
+            <td class="p-3 text-center ${changeClass}">${changeFmt}</td>
+            <td class="p-3 text-center ${changeClass} text-[11px]">${pctFmt}</td>
+            <td class="p-3 text-center text-[11px]">${trendIcon}</td>
+            <td class="p-3 text-center">${statusBadge}</td>
+            <td class="p-3 text-center">${orderCell}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+// ================================================================
+// FILTERS
+// ================================================================
+function applyFilter(type, value) {
+    if (type === 'search')       activeFilters.search       = (value || '').trim();
+    if (type === 'status')       { activeFilters.status     = value; document.getElementById('status-filter').value = value; }
+    if (type === 'trend')        activeFilters.trend        = value;
+    if (type === 'onlyShortages') activeFilters.onlyShortages = value;
+    renderTable();
+}
+
+function resetFilters() {
+    activeFilters = { search: '', status: 'all', trend: 'all', onlyShortages: false };
+    document.getElementById('search-input').value   = '';
+    document.getElementById('status-filter').value  = 'all';
+    document.getElementById('trend-filter').value   = 'all';
+    document.getElementById('only-shortages').checked = false;
+    renderTable();
+}
+
+// ================================================================
+// PROFESSIONAL EXCEL EXPORT (5 SHEETS)
+// ================================================================
+function exportComparisonExcel() {
+    if (periods.length < 2 || results.length === 0) {
+        showToast('⚠️ يرجى رفع فترتين على الأقل أولاً', 'error');
+        return;
+    }
+
+    const wb  = XLSX.utils.book_new();
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const critical    = results.filter(r => r.status === 'critical');
+    const medium      = results.filter(r => r.status === 'medium');
+    const normalItems = results.filter(r => r.status === 'normal');
+    const ok          = results.filter(r => r.status === 'ok');
+    const newItems    = results.filter(r => r.status === 'new');
+    const needOrder   = results.filter(r => r.suggestedOrder > 0);
+    const totalSugg   = results.reduce((s, r) => s + r.suggestedOrder, 0);
+
+    // ── ورقة 1: ملخص التقرير ──────────────────────────────────
+    const ws1aoa = [
+        ['تقرير مقارنة المخزون وتحليل النواقص'],
+        [`تاريخ إصدار التقرير: ${dateStr}`],
+        [`عدد الفترات المقارنة: ${periods.length}`],
+        [`تطوير: أحمد الطيب`],
+        [],
+        ['الفترات المستخدمة في التحليل'],
+        ['#', 'اسم الفترة', 'تاريخ الفترة', 'عدد الأصناف', 'الدور'],
+        ...periods.map((p, i) => [
+            i + 1,
+            p.name,
+            formatDate(p.date),
+            p.items.length,
+            i === periods.length - 1 ? 'آخر فترة (الحالية)' : `فترة ${i + 1} (سابقة)`
+        ]),
+        [],
+        ['إحصاءات النتائج'],
+        ['الفئة', 'العدد', 'النسبة من الإجمالي', 'الوصف'],
+        ['إجمالي الأصناف المحللة',    results.length,    '100%',                                                                     ''],
+        ['🔴 نواقص حرجة',            critical.length,   pct(critical.length,    results.length),  'نقص ≥ 50% أو نفاد المخزون — تدخل عاجل'],
+        ['🟡 نواقص متوسطة',          medium.length,     pct(medium.length,      results.length),  'نقص 25–49% — متابعة قريبة'],
+        ['🟢 نواقص عادية',           normalItems.length,pct(normalItems.length, results.length),  'نقص < 25% — مقبول'],
+        ['✅ كميات مرتفعة',          ok.length,         pct(ok.length,          results.length),  'لا تحتاج طلب حالياً'],
+        ['🔵 أصناف جديدة',           newItems.length,   pct(newItems.length,    results.length),  'لا توجد فترات سابقة للمقارنة'],
+        [],
+        ['ملخص الطلبات المقترحة'],
+        ['عدد الأصناف التي تحتاج طلبًا',   needOrder.length, '', ''],
+        ['إجمالي الكميات المقترحة للطلب',  totalSugg,        '', ''],
+    ];
+    const ws1 = XLSX.utils.aoa_to_sheet(ws1aoa);
+    ws1['!cols'] = [{ wch: 35 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, ws1, 'ملخص التقرير');
+
+    // ── ورقة 2: مقارنة تفصيلية كاملة ────────────────────────
+    const detailHeaders = [
+        'الكود', 'اسم الصنف',
+        ...periods.map((p, i) => `ف${i + 1}: ${p.name} (${formatDate(p.date)})`),
+        'متوسط الكميات السابقة', 'أعلى كمية سابقة',
+        'التغيير في الكمية', 'نسبة التغيير%',
+        'اتجاه الصنف', 'حالة النقص', 'الكمية المقترحة للطلب'
+    ];
+    const detailRows = results.map(r => {
+        const trendTxt = r.trend === 'up' ? 'ارتفاع' : r.trend === 'down' ? 'انخفاض' : 'ثابت';
+        return [
+            r.code, r.name,
+            ...r.periodQtys.map(q => q !== null ? q : 0),
+            r.avgPrev > 0 ? parseFloat(r.avgPrev.toFixed(2)) : 0,
+            r.maxPrev,
+            parseFloat(r.change.toFixed(2)),
+            parseFloat(r.changePercent.toFixed(1)),
+            trendTxt,
+            r.statusLabel,
+            r.suggestedOrder
+        ];
+    });
+    const ws2 = XLSX.utils.aoa_to_sheet([detailHeaders, ...detailRows]);
+    ws2['!cols'] = [
+        { wch: 14 }, { wch: 30 },
+        ...periods.map(() => ({ wch: 22 })),
+        { wch: 20 }, { wch: 18 }, { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 22 }
+    ];
+    XLSX.utils.book_append_sheet(wb, ws2, 'مقارنة تفصيلية');
+
+    // ── ورقة 3: النواقص الحرجة ───────────────────────────────
+    if (critical.length > 0) {
+        const h3 = ['م', 'الكود', 'اسم الصنف', 'الكمية الحالية', 'متوسط الكميات السابقة', 'أعلى كمية سابقة', 'نسبة النقص%', 'الكمية المقترحة', 'ملاحظة الحالة'];
+        const r3 = critical.map((r, i) => {
+            let note = '';
+            if (!r.isInLatest || r.latestAbsent) note = 'غير موجود في آخر فترة — طلب عاجل';
+            else if (r.latestQty === 0)          note = 'نفاد المخزون — طلب عاجل';
+            else                                  note = 'نقص حاد ≥ 50% — طلب عاجل';
+            return [
+                i + 1, r.code, r.name,
+                r.latestAbsent ? 0 : r.latestQty,
+                parseFloat(r.avgPrev.toFixed(2)),
+                r.maxPrev,
+                parseFloat(Math.abs(r.changePercent).toFixed(1)),
+                r.suggestedOrder,
+                note
+            ];
+        });
+        const ws3 = XLSX.utils.aoa_to_sheet([h3, ...r3]);
+        ws3['!cols'] = [{ wch:4 },{ wch:14 },{ wch:30 },{ wch:16 },{ wch:22 },{ wch:18 },{ wch:14 },{ wch:20 },{ wch:32 }];
+        XLSX.utils.book_append_sheet(wb, ws3, '🔴 النواقص الحرجة');
+    }
+
+    // ── ورقة 4: قائمة الطلبات المقترحة ──────────────────────
+    if (needOrder.length > 0) {
+        const PRIO = { critical: 0, medium: 1, normal: 2 };
+        const sorted = [...needOrder].sort((a, b) => (PRIO[a.status] ?? 9) - (PRIO[b.status] ?? 9));
+
+        const h4 = ['م', 'الكود', 'اسم الصنف', 'الأولوية', 'الكمية الحالية', 'متوسط الكميات السابقة', 'الكمية المقترحة للطلب', 'التصرف المطلوب'];
+        const r4 = sorted.map((r, i) => [
+            i + 1, r.code, r.name,
+            r.statusLabel,
+            r.latestAbsent ? 0 : r.latestQty,
+            parseFloat(r.avgPrev.toFixed(2)),
+            r.suggestedOrder,
+            r.status === 'critical' ? 'طلب عاجل فوري' : r.status === 'medium' ? 'طلب خلال أسبوع' : 'طلب اعتيادي'
+        ]);
+        const ws4 = XLSX.utils.aoa_to_sheet([h4, ...r4]);
+        ws4['!cols'] = [{ wch:4 },{ wch:14 },{ wch:30 },{ wch:12 },{ wch:16 },{ wch:22 },{ wch:22 },{ wch:22 }];
+        XLSX.utils.book_append_sheet(wb, ws4, 'قائمة الطلبات المقترحة');
+    }
+
+    // ── ورقة 5: حركة الأصناف ─────────────────────────────────
+    const h5 = [
+        'الكود', 'اسم الصنف',
+        ...periods.map((p, i) => `ف${i + 1}: ${p.name}`),
+        'أعلى كمية', 'أدنى كمية', 'متوسط الكميات', 'اتجاه الحركة', 'حالة الصنف'
+    ];
+    const r5 = results.map(r => {
+        const validQtys = r.periodQtys.filter(q => q !== null);
+        const maxQ = validQtys.length ? Math.max(...validQtys) : 0;
+        const minQ = validQtys.length ? Math.min(...validQtys) : 0;
+        const avgQ = validQtys.length ? parseFloat((validQtys.reduce((a, b) => a + b, 0) / validQtys.length).toFixed(2)) : 0;
+        const mv   = r.trend === 'up' ? 'ارتفاع' : r.trend === 'down' ? 'انخفاض' : 'ثابت';
+        return [
+            r.code, r.name,
+            ...r.periodQtys.map(q => q !== null ? q : 0),
+            maxQ, minQ, avgQ, mv, r.statusLabel
+        ];
+    });
+    const ws5 = XLSX.utils.aoa_to_sheet([h5, ...r5]);
+    ws5['!cols'] = [
+        { wch: 14 }, { wch: 30 },
+        ...periods.map(() => ({ wch: 16 })),
+        { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 14 }, { wch: 14 }
+    ];
+    XLSX.utils.book_append_sheet(wb, ws5, 'حركة الأصناف');
+
+    const fileName = `تقرير_مقارنة_المخزون_${now.toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    showToast('✅ تم تصدير التقرير الاحترافي بنجاح');
+}
+
+// ================================================================
+// UTILITIES
+// ================================================================
+function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function pct(n, total) {
+    if (!total) return '0%';
+    return (n / total * 100).toFixed(1) + '%';
+}
+
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = type === 'error' ? '#dc2626' : '#1e293b';
+    t.style.opacity = '1';
+    t.style.bottom  = '30px';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.bottom  = '16px';
+    }, 2800);
+}
+
+// ================================================================
+// BOOT
+// ================================================================
+window.addEventListener('load', init);
+
+// Register service worker for offline support
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw-comparison.js').catch(() => {});
+}
+</script>
+</body>
+</html>
