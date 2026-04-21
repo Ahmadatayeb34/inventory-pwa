@@ -301,6 +301,17 @@
                 <h3 class="text-lg font-bold text-slate-700">طلبات قيد الانتظار</h3>
                 <p class="text-xs text-slate-400 mt-1">تشمل المعرض والكافيه</p>
             </div>
+
+            <div onclick="switchView('comparison')" class="group cursor-pointer bg-white p-6 rounded-3xl shadow-glass border border-slate-200 hover:border-indigo-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-chart-bar"></i>
+                    </div>
+                    <span id="dash-comp-count" class="text-3xl font-black text-red-600">0</span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-700">مقارنة المخزون</h3>
+                <p class="text-xs text-slate-400 mt-1">تحليل النواقص والاتجاهات</p>
+            </div>
         </div>
         
         <div class="mt-12 w-full max-w-5xl flex flex-col items-center">
@@ -815,6 +826,173 @@
         </div>
     </div>
 
+    <!-- ======== VIEW: COMPARISON (مقارنة المخزون وتحليل النواقص) ======== -->
+    <div id="view-comparison" class="absolute inset-0 hidden flex bg-slate-100">
+
+        <!-- Sidebar: Period Management -->
+        <aside class="w-full lg:w-[380px] bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl no-print overflow-hidden flex-shrink-0">
+
+            <!-- Upload Section -->
+            <div class="p-5 bg-indigo-50 border-b border-indigo-200 flex-shrink-0">
+                <h3 class="text-sm font-black text-indigo-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-indigo-600"></i>
+                    رفع فترة جرد جديدة
+                </h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-indigo-700 mb-1 block">اسم الفترة</label>
+                        <input id="comp-period-name" type="text" placeholder="مثال: فترة يناير 2025"
+                            class="w-full h-9 rounded-lg border border-indigo-200 bg-white px-3 text-sm focus:border-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-indigo-700 mb-1 block">تاريخ الفترة</label>
+                        <input id="comp-period-date" type="date"
+                            class="w-full h-9 rounded-lg border border-indigo-200 bg-white px-3 text-sm focus:border-indigo-500 outline-none">
+                    </div>
+                    <div class="bg-white rounded-lg border border-dashed border-indigo-300 p-3 text-center">
+                        <p class="text-[10px] text-slate-400 mb-2">الصيغة: العمود A كود | B اسم | C كمية</p>
+                        <button onclick="document.getElementById('comp-file-input').click()"
+                            class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition btn-pulse">
+                            <i class="fa-solid fa-file-excel"></i> اختر ملف Excel
+                        </button>
+                        <input type="file" id="comp-file-input" class="hidden" accept=".xlsx,.xls"
+                            onchange="handleComparisonImport(event)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Periods List -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <div class="p-4 bg-white border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+                    <h4 class="text-xs font-black text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-indigo-500"></i>
+                        الفترات المحملة
+                    </h4>
+                    <button onclick="clearAllPeriods()"
+                        class="text-[10px] text-red-400 hover:text-red-600 font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-trash"></i> حذف الكل
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4">
+                    <div id="comp-periods-list"></div>
+                    <div class="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <p class="text-[10px] font-bold text-slate-500 mb-2">📋 تعليمات رفع الملف:</p>
+                        <ul class="text-[10px] text-slate-400 space-y-1 list-disc list-inside">
+                            <li>العمود A: كود الصنف</li>
+                            <li>العمود B: اسم الصنف</li>
+                            <li>العمود C: الكمية</li>
+                            <li>السطر الأول: رؤوس أعمدة (يُتجاهل)</li>
+                            <li>ارفع الفترات من الأقدم للأحدث</li>
+                            <li>آخر فترة مرفوعة تُعتبر الحالية</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-hidden flex flex-col p-4">
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-3 lg:grid-cols-6 gap-2 mb-3 flex-shrink-0">
+                <div class="bg-white rounded-xl p-3 shadow-sm border border-slate-200 text-center">
+                    <div class="text-2xl font-black text-slate-700" id="comp-stat-total">0</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">إجمالي</div>
+                </div>
+                <div onclick="applyCompStatusFilter('critical')"
+                    class="bg-red-50 rounded-xl p-3 shadow-sm border border-red-200 text-center cursor-pointer hover:bg-red-100 transition">
+                    <div class="text-2xl font-black text-red-600" id="comp-stat-critical">0</div>
+                    <div class="text-[10px] text-red-500 mt-0.5 font-bold">🔴 حرج</div>
+                </div>
+                <div onclick="applyCompStatusFilter('medium')"
+                    class="bg-amber-50 rounded-xl p-3 shadow-sm border border-amber-200 text-center cursor-pointer hover:bg-amber-100 transition">
+                    <div class="text-2xl font-black text-amber-600" id="comp-stat-medium">0</div>
+                    <div class="text-[10px] text-amber-500 mt-0.5 font-bold">🟡 وسط</div>
+                </div>
+                <div onclick="applyCompStatusFilter('normal')"
+                    class="bg-emerald-50 rounded-xl p-3 shadow-sm border border-emerald-200 text-center cursor-pointer hover:bg-emerald-100 transition">
+                    <div class="text-2xl font-black text-emerald-600" id="comp-stat-normal">0</div>
+                    <div class="text-[10px] text-emerald-500 mt-0.5 font-bold">🟢 عادي</div>
+                </div>
+                <div onclick="applyCompStatusFilter('ok')"
+                    class="bg-green-50 rounded-xl p-3 shadow-sm border border-green-200 text-center cursor-pointer hover:bg-green-100 transition">
+                    <div class="text-2xl font-black text-green-600" id="comp-stat-ok">0</div>
+                    <div class="text-[10px] text-green-500 mt-0.5 font-bold">✅ مرتفع</div>
+                </div>
+                <div onclick="applyCompStatusFilter('new')"
+                    class="bg-blue-50 rounded-xl p-3 shadow-sm border border-blue-200 text-center cursor-pointer hover:bg-blue-100 transition">
+                    <div class="text-2xl font-black text-blue-600" id="comp-stat-new">0</div>
+                    <div class="text-[10px] text-blue-500 mt-0.5 font-bold">🔵 جديد</div>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 mb-3 flex flex-wrap gap-2 items-center flex-shrink-0">
+                <div class="relative flex-1 min-w-[160px]">
+                    <i class="fa-solid fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="comp-search-input" placeholder="بحث بالاسم أو الكود..."
+                        oninput="applyCompSearchFilter(this.value)"
+                        class="w-full h-9 rounded-lg border border-slate-200 pr-8 pl-3 text-xs focus:border-indigo-500 outline-none">
+                </div>
+                <select id="comp-status-filter" onchange="applyCompStatusFilter(this.value)"
+                    class="h-9 rounded-lg border border-slate-200 px-3 text-xs focus:border-indigo-500 outline-none bg-white">
+                    <option value="all">جميع الحالات</option>
+                    <option value="critical">🔴 حرج فقط</option>
+                    <option value="medium">🟡 وسط فقط</option>
+                    <option value="normal">🟢 عادي فقط</option>
+                    <option value="ok">✅ مرتفع فقط</option>
+                    <option value="new">🔵 جديد فقط</option>
+                </select>
+                <label class="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg px-3 h-9">
+                    <input type="checkbox" id="comp-only-shortages" onchange="toggleOnlyShortages(this.checked)"
+                        class="accent-indigo-600 w-3.5 h-3.5">
+                    <span class="text-xs font-bold text-slate-600">النواقص فقط</span>
+                </label>
+                <button onclick="resetCompFilters()"
+                    class="h-9 px-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+                <button onclick="exportComparisonExcel()"
+                    class="h-9 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition btn-pulse flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-file-excel"></i> تصدير Excel
+                </button>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-1 overflow-hidden flex flex-col">
+                <div class="p-3 bg-gradient-to-l from-indigo-50 to-white border-b border-indigo-100 flex items-center justify-between flex-shrink-0 no-print">
+                    <h3 class="font-bold text-indigo-900 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-table-list"></i>
+                        جدول المقارنة التفصيلي
+                    </h3>
+                    <div class="flex items-center gap-3 text-[10px] text-slate-500">
+                        <span><span class="inline-block w-3 h-3 rounded bg-red-100 border border-red-300 mr-1"></span>حرج</span>
+                        <span><span class="inline-block w-3 h-3 rounded bg-amber-100 border border-amber-300 mr-1"></span>وسط</span>
+                        <span><span class="inline-block w-3 h-3 rounded bg-blue-50 border border-blue-200 mr-1"></span>عادي</span>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto">
+                    <table class="w-full text-right text-xs border-collapse" style="min-width: 700px;">
+                        <thead class="text-slate-500 font-bold sticky top-0 z-10">
+                            <tr id="comp-thead-row" class="bg-slate-50 shadow-sm">
+                                <th class="p-3 text-right">الكود</th>
+                                <th class="p-3 text-right">اسم الصنف</th>
+                                <th class="p-3 text-center text-slate-400" colspan="10">— قم برفع فترات المخزون من القائمة الجانبية —</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comp-table-body"></tbody>
+                    </table>
+                    <div id="comp-empty" class="flex flex-col items-center justify-center text-slate-300 py-16">
+                        <i class="fa-solid fa-chart-gantt text-5xl mb-4 text-indigo-200"></i>
+                        <p class="font-bold text-slate-400 text-base">لا توجد بيانات للمقارنة</p>
+                        <p class="text-xs mt-1 text-slate-400">قم برفع فترتين على الأقل من ملفات Excel لبدء التحليل</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
 </div>
 
 <!-- Print Footer -->
@@ -855,6 +1033,7 @@
 
     function init() {
         loadTracking();
+        loadComparison();
         const data = localStorage.getItem(STORAGE_KEY_INV);
         if (data) {
             try {
@@ -921,16 +1100,23 @@
         const pendingShowroom = ordersData.showroom.filter(o => o.status !== 'completed').length;
         const pendingCafe = ordersData.cafe.filter(o => o.status !== 'completed').length;
         document.getElementById('dash-orders-count').innerText = pendingShowroom + pendingCafe;
+
+        const criticalComp = analysisResults.filter(r => r.status === 'critical').length;
+        const dashCompEl = document.getElementById('dash-comp-count');
+        if (dashCompEl) dashCompEl.innerText = criticalComp;
     }
 
     function switchView(viewName) {
         currentView = viewName;
-        ['view-home', 'view-inventory', 'view-expiry', 'view-notes', 'view-orders'].forEach(id => {
-            document.getElementById(id).classList.add('hidden');
+        ['view-home', 'view-inventory', 'view-expiry', 'view-notes', 'view-orders', 'view-tracking', 'view-comparison'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
         });
         
-        document.getElementById(`view-${viewName}`).classList.remove('hidden');
-        document.getElementById(`view-${viewName}`).classList.add('fade-in');
+        const target = document.getElementById(`view-${viewName}`);
+        if (!target) return;
+        target.classList.remove('hidden');
+        target.classList.add('fade-in');
 
         selectedItemIdx = -1;
         
@@ -949,6 +1135,13 @@
             setOrderSource(activeOrderSource);
         } else if (viewName === 'home') {
             updateDashboardStats();
+        } else if (viewName === 'tracking') {
+            renderTrackingTable();
+        } else if (viewName === 'comparison') {
+            const dateEl = document.getElementById('comp-period-date');
+            if (dateEl && !dateEl.value) dateEl.valueAsDate = new Date();
+            renderPeriodsList();
+            runComparisonAnalysis();
         }
     }
 
@@ -2159,6 +2352,523 @@
             renderTrackingTable();
             resetTrackingForm();
         };
+    }
+
+
+    // ======== COMPARISON MODULE (مقارنة المخزون وتحليل النواقص) ========
+    const STORAGE_KEY_COMP = 'ims_comparison_periods_v1';
+    let comparisonPeriods = [];
+    let analysisResults = [];
+    let compFilter = { search: '', status: 'all', onlyShortages: false };
+
+    function loadComparison() {
+        const data = localStorage.getItem(STORAGE_KEY_COMP);
+        if (data) {
+            try { comparisonPeriods = JSON.parse(data); }
+            catch(e) { comparisonPeriods = []; }
+        }
+        if (!Array.isArray(comparisonPeriods)) comparisonPeriods = [];
+    }
+
+    function saveComparison() {
+        localStorage.setItem(STORAGE_KEY_COMP, JSON.stringify(comparisonPeriods));
+    }
+
+    function handleComparisonImport(evt) {
+        const file = evt.target.files[0];
+        if (!file) return;
+
+        const periodName = (document.getElementById('comp-period-name').value || '').trim()
+                            || `فترة ${comparisonPeriods.length + 1}`;
+        const periodDate = document.getElementById('comp-period-date').value
+                            || new Date().toISOString().split('T')[0];
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+                const items = [];
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    const code = String(row[0] !== undefined ? row[0] : '').trim();
+                    const name = String(row[1] !== undefined ? row[1] : '').trim();
+                    const qty  = Number(row[2]) || 0;
+                    if (code && name) items.push({ code, name, qty });
+                }
+
+                if (items.length === 0) {
+                    showToast('لم يُعثر على بيانات صالحة في الملف', 'error');
+                    evt.target.value = '';
+                    return;
+                }
+
+                comparisonPeriods.push({
+                    id: Date.now(),
+                    name: periodName,
+                    date: periodDate,
+                    items,
+                    uploadedAt: new Date().toISOString()
+                });
+
+                // Sort periods chronologically
+                comparisonPeriods.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                saveComparison();
+                document.getElementById('comp-period-name').value = '';
+                evt.target.value = '';
+
+                renderPeriodsList();
+                runComparisonAnalysis();
+                showToast(`✅ تم رفع "${periodName}" — ${items.length} صنف`);
+            } catch(err) {
+                console.error(err);
+                showToast('خطأ في قراءة الملف، تأكد من الصيغة الصحيحة', 'error');
+                evt.target.value = '';
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function deleteComparisonPeriod(id) {
+        if (confirm('هل أنت متأكد من حذف هذه الفترة؟')) {
+            comparisonPeriods = comparisonPeriods.filter(p => p.id !== id);
+            saveComparison();
+            renderPeriodsList();
+            runComparisonAnalysis();
+            showToast('تم حذف الفترة');
+        }
+    }
+
+    function clearAllPeriods() {
+        if (comparisonPeriods.length === 0) return;
+        if (confirm('هل أنت متأكد من حذف جميع الفترات المحملة؟')) {
+            comparisonPeriods = [];
+            analysisResults = [];
+            saveComparison();
+            renderPeriodsList();
+            renderComparisonTable();
+            updateCompSummaryCards();
+            showToast('تم حذف جميع الفترات');
+        }
+    }
+
+    function renderPeriodsList() {
+        const container = document.getElementById('comp-periods-list');
+        if (!container) return;
+
+        if (comparisonPeriods.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 text-slate-300">
+                    <i class="fa-solid fa-calendar-xmark text-3xl mb-2"></i>
+                    <p class="text-sm">لا توجد فترات محملة بعد</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = comparisonPeriods.map((p, idx) => {
+            const isLatest = idx === comparisonPeriods.length - 1;
+            const tag = isLatest
+                ? '<span class="text-[9px] bg-indigo-600 text-white px-1.5 py-0.5 rounded-full font-bold ml-1 whitespace-nowrap">آخر فترة</span>'
+                : `<span class="text-[9px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full font-bold ml-1">ف${idx + 1}</span>`;
+            return `
+                <div class="flex items-center gap-2 p-3 rounded-xl mb-2 ${isLatest ? 'bg-indigo-50 border border-indigo-200' : 'bg-slate-50 border border-slate-200'}">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center flex-wrap gap-1">
+                            <span class="text-xs font-bold ${isLatest ? 'text-indigo-700' : 'text-slate-700'} truncate">${p.name}</span>
+                            ${tag}
+                        </div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">${formatDateDisplay(p.date)} &bull; ${p.items.length} صنف</div>
+                    </div>
+                    <button onclick="deleteComparisonPeriod(${p.id})"
+                        class="text-red-300 hover:text-red-500 p-1 transition flex-shrink-0" title="حذف الفترة">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>`;
+        }).join('');
+    }
+
+    function getAllItemCodesMap() {
+        const codes = new Map(); // code -> name (latest wins)
+        comparisonPeriods.forEach(p => {
+            p.items.forEach(item => {
+                codes.set(item.code, item.name);
+            });
+        });
+        return codes;
+    }
+
+    function runComparisonAnalysis() {
+        if (comparisonPeriods.length === 0) {
+            analysisResults = [];
+            renderComparisonTable();
+            updateCompSummaryCards();
+            updateDashboardStats();
+            return;
+        }
+
+        const allCodes = getAllItemCodesMap();
+        const sortOrder = { critical: 0, medium: 1, normal: 2, ok: 3, new: 4 };
+
+        analysisResults = [];
+
+        allCodes.forEach((name, code) => {
+            // Quantity in each period (null = item absent from that period)
+            const periodQtys = comparisonPeriods.map(p => {
+                const found = p.items.find(i => i.code === code);
+                return found !== undefined ? found.qty : null;
+            });
+
+            const latestRaw  = periodQtys[periodQtys.length - 1];
+            const latestQtyVal = latestRaw !== null ? latestRaw : 0;
+            const prevQtys   = periodQtys.slice(0, -1).filter(q => q !== null);
+
+            let status = 'new', statusLabel = 'جديد';
+            let statusColor = 'bg-blue-100 text-blue-700';
+            let avgPrev = 0, maxPrev = 0, change = 0, changePercent = 0;
+            let suggestedOrder = 0, trend = 'stable';
+
+            if (prevQtys.length > 0) {
+                avgPrev = prevQtys.reduce((a, b) => a + b, 0) / prevQtys.length;
+                maxPrev = Math.max(...prevQtys);
+                change  = latestQtyVal - avgPrev;
+                changePercent = avgPrev > 0 ? (change / avgPrev) * 100 : (latestQtyVal > 0 ? 100 : 0);
+
+                // Trend: compare latest vs previous period
+                const prevPeriodQty = periodQtys.length >= 2 ? (periodQtys[periodQtys.length - 2] !== null ? periodQtys[periodQtys.length - 2] : avgPrev) : avgPrev;
+                if      (latestQtyVal > prevPeriodQty * 1.05) trend = 'up';
+                else if (latestQtyVal < prevPeriodQty * 0.95) trend = 'down';
+
+                const shortage        = avgPrev - latestQtyVal;
+                const shortagePercent = avgPrev > 0 ? (shortage / avgPrev) * 100 : 0;
+
+                if (latestRaw === null || latestQtyVal === 0) {
+                    status = 'critical'; statusLabel = 'حرج';
+                    statusColor = 'bg-red-100 text-red-700';
+                    suggestedOrder = Math.ceil(maxPrev * 1.2);
+                } else if (shortagePercent >= 50) {
+                    status = 'critical'; statusLabel = 'حرج';
+                    statusColor = 'bg-red-100 text-red-700';
+                    suggestedOrder = Math.ceil((maxPrev - latestQtyVal) * 1.2);
+                } else if (shortagePercent >= 25) {
+                    status = 'medium'; statusLabel = 'وسط';
+                    statusColor = 'bg-amber-100 text-amber-700';
+                    suggestedOrder = Math.ceil((avgPrev - latestQtyVal) * 1.1);
+                } else if (shortage > 0) {
+                    status = 'normal'; statusLabel = 'عادي';
+                    statusColor = 'bg-emerald-100 text-emerald-700';
+                    suggestedOrder = Math.ceil(shortage);
+                } else {
+                    status = 'ok'; statusLabel = 'مرتفع';
+                    statusColor = 'bg-green-100 text-green-700';
+                    suggestedOrder = 0;
+                }
+            }
+
+            analysisResults.push({
+                code, name, periodQtys, latestQtyVal, avgPrev, maxPrev,
+                change, changePercent, status, statusLabel, statusColor,
+                suggestedOrder, trend, isInLatest: latestRaw !== null
+            });
+        });
+
+        analysisResults.sort((a, b) => {
+            const d = (sortOrder[a.status] || 5) - (sortOrder[b.status] || 5);
+            return d !== 0 ? d : a.name.localeCompare(b.name, 'ar');
+        });
+
+        renderComparisonTable();
+        updateCompSummaryCards();
+        updateDashboardStats();
+    }
+
+    function updateCompSummaryCards() {
+        const counts = { total: analysisResults.length, critical: 0, medium: 0, normal: 0, ok: 0, new: 0 };
+        analysisResults.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        set('comp-stat-total',    counts.total);
+        set('comp-stat-critical', counts.critical);
+        set('comp-stat-medium',   counts.medium);
+        set('comp-stat-normal',   counts.normal);
+        set('comp-stat-ok',       counts.ok);
+        set('comp-stat-new',      counts.new);
+    }
+
+    function renderComparisonTable() {
+        const tbody     = document.getElementById('comp-table-body');
+        const theadRow  = document.getElementById('comp-thead-row');
+        const emptyState = document.getElementById('comp-empty');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        if (comparisonPeriods.length === 0) {
+            if (theadRow) theadRow.innerHTML = `
+                <th class="p-3 text-right">الكود</th>
+                <th class="p-3 text-right">اسم الصنف</th>
+                <th class="p-3 text-center text-slate-400" colspan="10">— قم برفع فترات المخزون من القائمة الجانبية —</th>`;
+            if (emptyState) emptyState.classList.remove('hidden');
+            return;
+        }
+        if (emptyState) emptyState.classList.add('hidden');
+
+        // Build dynamic header
+        if (theadRow) {
+            const periodHeaders = comparisonPeriods.map((p, idx) => {
+                const isLatest = idx === comparisonPeriods.length - 1;
+                return `<th class="p-3 text-center whitespace-nowrap ${isLatest ? 'bg-indigo-50 text-indigo-700 border-x border-indigo-100' : 'text-slate-500'}">
+                    ${p.name}<br>
+                    <span class="text-[9px] font-normal opacity-75">${formatDateDisplay(p.date)}</span>
+                </th>`;
+            }).join('');
+
+            theadRow.innerHTML = `
+                <th class="p-3 w-24 text-right sticky right-0 bg-slate-50 z-10">الكود</th>
+                <th class="p-3 text-right min-w-[160px] sticky right-24 bg-slate-50 z-10">اسم الصنف</th>
+                ${periodHeaders}
+                <th class="p-3 text-center whitespace-nowrap w-20">التغيير</th>
+                <th class="p-3 text-center whitespace-nowrap w-16">النسبة</th>
+                <th class="p-3 text-center whitespace-nowrap w-16">الاتجاه</th>
+                <th class="p-3 text-center whitespace-nowrap w-20">الحالة</th>
+                <th class="p-3 text-center whitespace-nowrap w-28">الكمية المقترحة</th>
+            `;
+        }
+
+        // Apply filters
+        const search       = compFilter.search.toLowerCase();
+        const statusFilter = compFilter.status;
+        const filtered = analysisResults.filter(r => {
+            if (search && !r.name.toLowerCase().includes(search) && !r.code.toLowerCase().includes(search)) return false;
+            if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+            if (compFilter.onlyShortages && (r.status === 'ok' || r.status === 'new')) return false;
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="20" class="text-center py-12 text-slate-300">
+                <i class="fa-solid fa-search text-3xl mb-2 block"></i>
+                <p class="font-medium">لا توجد نتائج مطابقة</p>
+            </td></tr>`;
+            return;
+        }
+
+        filtered.forEach(r => {
+            const trendIcon = r.trend === 'up'
+                ? '<i class="fa-solid fa-arrow-trend-up text-green-500" title="ارتفاع"></i>'
+                : r.trend === 'down'
+                    ? '<i class="fa-solid fa-arrow-trend-down text-red-500" title="انخفاض"></i>'
+                    : '<i class="fa-solid fa-minus text-slate-300" title="ثابت"></i>';
+
+            const changeClass = r.change > 0 ? 'text-emerald-600' : r.change < 0 ? 'text-red-600' : 'text-slate-400';
+            const changeFmt   = r.change !== 0 ? `${r.change > 0 ? '+' : ''}${r.change.toFixed(1)}` : '0';
+            const pctFmt      = Math.abs(r.changePercent) > 0.05
+                ? `${r.change > 0 ? '+' : ''}${r.changePercent.toFixed(1)}%` : '0%';
+
+            const rowBg = r.status === 'critical' ? 'bg-red-50 hover:bg-red-100'
+                        : r.status === 'medium'   ? 'bg-amber-50 hover:bg-amber-100'
+                        : r.status === 'normal'   ? 'bg-blue-50/60 hover:bg-blue-100/60'
+                        : 'hover:bg-slate-50';
+
+            const periodCells = r.periodQtys.map((q, idx) => {
+                const isLatest = idx === r.periodQtys.length - 1;
+                const display  = q !== null ? q : '<span class="text-slate-300 text-[10px]">—</span>';
+                return `<td class="p-3 text-center font-mono ${isLatest ? 'font-black text-indigo-800 bg-indigo-50/70 border-x border-indigo-100' : 'text-slate-600'}">${display}</td>`;
+            }).join('');
+
+            const statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.statusColor} whitespace-nowrap">${r.statusLabel}</span>`;
+            const orderBadge  = r.suggestedOrder > 0
+                ? `<span class="px-2 py-1 rounded-lg text-xs font-black bg-orange-100 text-orange-700 border border-orange-200 whitespace-nowrap">${r.suggestedOrder}</span>`
+                : `<span class="text-slate-300 text-xs">—</span>`;
+
+            const tr = document.createElement('tr');
+            tr.className = `${rowBg} transition border-b border-slate-100`;
+            tr.innerHTML = `
+                <td class="p-3 font-mono text-slate-500 text-[11px] sticky right-0 ${rowBg || 'bg-white'} z-[1]">${r.code}</td>
+                <td class="p-3 font-bold text-slate-800 sticky right-24 ${rowBg || 'bg-white'} z-[1]">${r.name}</td>
+                ${periodCells}
+                <td class="p-3 text-center font-bold ${changeClass}">${changeFmt}</td>
+                <td class="p-3 text-center font-bold ${changeClass} text-[11px]">${pctFmt}</td>
+                <td class="p-3 text-center">${trendIcon}</td>
+                <td class="p-3 text-center">${statusBadge}</td>
+                <td class="p-3 text-center">${orderBadge}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function applyCompSearchFilter(val) {
+        compFilter.search = val;
+        renderComparisonTable();
+    }
+
+    function applyCompStatusFilter(val) {
+        compFilter.status = val;
+        const sel = document.getElementById('comp-status-filter');
+        if (sel) sel.value = val;
+        renderComparisonTable();
+    }
+
+    function toggleOnlyShortages(checked) {
+        compFilter.onlyShortages = checked;
+        renderComparisonTable();
+    }
+
+    function resetCompFilters() {
+        compFilter = { search: '', status: 'all', onlyShortages: false };
+        const searchEl = document.getElementById('comp-search-input');
+        const selEl    = document.getElementById('comp-status-filter');
+        const cbEl     = document.getElementById('comp-only-shortages');
+        if (searchEl) searchEl.value = '';
+        if (selEl)    selEl.value    = 'all';
+        if (cbEl)     cbEl.checked  = false;
+        renderComparisonTable();
+    }
+
+    // ---- Professional Multi-Sheet Excel Export ----
+    function exportComparisonExcel() {
+        if (comparisonPeriods.length === 0) {
+            showToast('يرجى رفع فترات المخزون أولاً', 'error');
+            return;
+        }
+
+        const wb   = XLSX.utils.book_new();
+        const now  = new Date();
+        const dateStr = now.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        const critical    = analysisResults.filter(r => r.status === 'critical');
+        const medium      = analysisResults.filter(r => r.status === 'medium');
+        const normalItems = analysisResults.filter(r => r.status === 'normal');
+        const ok          = analysisResults.filter(r => r.status === 'ok');
+        const newItems    = analysisResults.filter(r => r.status === 'new');
+        const needOrder   = analysisResults.filter(r => r.suggestedOrder > 0);
+        const totalSuggested = analysisResults.reduce((s, r) => s + r.suggestedOrder, 0);
+
+        // ── Sheet 1: ملخص التقرير ──
+        const summaryAoa = [
+            ['تقرير مقارنة المخزون وتحليل النواقص'],
+            [`تاريخ التقرير: ${dateStr}`],
+            ['تطوير: أحمد الطيب'],
+            [],
+            ['الفترات المقارنة', 'التاريخ', 'عدد الأصناف'],
+            ...comparisonPeriods.map((p, i) => [
+                `${i + 1}. ${p.name}${i === comparisonPeriods.length - 1 ? ' ← آخر فترة' : ''}`,
+                formatDateDisplay(p.date),
+                p.items.length
+            ]),
+            [],
+            ['الإحصائية', 'القيمة', 'الملاحظة'],
+            ['إجمالي الأصناف المحللة', analysisResults.length, ''],
+            ['عدد الفترات', comparisonPeriods.length, ''],
+            [],
+            ['🔴 نواقص حرجة',   critical.length,    'تحتاج تدخلاً عاجلاً'],
+            ['🟡 نواقص متوسطة', medium.length,      'تحتاج متابعة قريبة'],
+            ['🟢 نواقص عادية',  normalItems.length, 'مقبولة'],
+            ['✅ كميات مرتفعة', ok.length,          'لا تحتاج طلب'],
+            ['🔵 أصناف جديدة',  newItems.length,    'لا مقارنة سابقة'],
+            [],
+            ['إجمالي الأصناف التي تحتاج طلباً', needOrder.length, ''],
+            ['إجمالي الكميات المقترحة للطلب',   totalSuggested,  ''],
+        ];
+        const ws1 = XLSX.utils.aoa_to_sheet(summaryAoa);
+        ws1['!cols'] = [{ wch: 38 }, { wch: 20 }, { wch: 25 }];
+        XLSX.utils.book_append_sheet(wb, ws1, 'ملخص التقرير');
+
+        // ── Sheet 2: مقارنة تفصيلية ──
+        const detailHeaders = [
+            'الكود', 'اسم الصنف',
+            ...comparisonPeriods.map((p, i) => `ف${i + 1}: ${p.name} (${formatDateDisplay(p.date)})`),
+            'المتوسط السابق', 'أعلى كمية سابقة',
+            'التغيير', 'نسبة التغيير%', 'الاتجاه', 'الحالة', 'الكمية المقترحة للطلب'
+        ];
+        const detailRows = analysisResults.map(r => {
+            const trendTxt = r.trend === 'up' ? 'ارتفاع' : r.trend === 'down' ? 'انخفاض' : 'ثابت';
+            return [
+                r.code, r.name,
+                ...r.periodQtys.map(q => q !== null ? q : '-'),
+                r.avgPrev > 0 ? parseFloat(r.avgPrev.toFixed(2)) : '-',
+                r.maxPrev > 0 ? r.maxPrev : '-',
+                parseFloat(r.change.toFixed(2)),
+                parseFloat(r.changePercent.toFixed(1)),
+                trendTxt, r.statusLabel, r.suggestedOrder
+            ];
+        });
+        const ws2 = XLSX.utils.aoa_to_sheet([detailHeaders, ...detailRows]);
+        ws2['!cols'] = [
+            { wch: 14 }, { wch: 30 },
+            ...comparisonPeriods.map(() => ({ wch: 22 })),
+            { wch: 16 }, { wch: 16 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 20 }
+        ];
+        XLSX.utils.book_append_sheet(wb, ws2, 'مقارنة تفصيلية');
+
+        // ── Sheet 3: النواقص الحرجة ──
+        if (critical.length > 0) {
+            const critHeaders = ['م', 'الكود', 'اسم الصنف', 'الكمية الحالية', 'المتوسط السابق', 'أعلى كمية سابقة', 'نسبة النقص%', 'الكمية المقترحة', 'ملاحظة'];
+            const critRows = critical.map((r, i) => [
+                i + 1, r.code, r.name,
+                r.isInLatest ? r.latestQtyVal : 'غير موجود في آخر فترة',
+                parseFloat(r.avgPrev.toFixed(2)), r.maxPrev,
+                parseFloat(Math.abs(r.changePercent).toFixed(1)),
+                r.suggestedOrder,
+                r.latestQtyVal === 0 ? 'نفاد المخزون — طلب عاجل' : 'نقص حاد — طلب عاجل'
+            ]);
+            const ws3 = XLSX.utils.aoa_to_sheet([critHeaders, ...critRows]);
+            ws3['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 30 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 20 }, { wch: 28 }];
+            XLSX.utils.book_append_sheet(wb, ws3, '🔴 النواقص الحرجة');
+        }
+
+        // ── Sheet 4: قائمة الطلبات المقترحة ──
+        if (needOrder.length > 0) {
+            const priorityOrder = { critical: 0, medium: 1, normal: 2 };
+            const sorted = [...needOrder].sort((a, b) => (priorityOrder[a.status] || 9) - (priorityOrder[b.status] || 9));
+
+            const orderHeaders = ['م', 'الكود', 'اسم الصنف', 'الأولوية', 'الكمية الحالية', 'المتوسط السابق', 'الكمية المقترحة للطلب', 'التصرف المطلوب'];
+            const orderRows = sorted.map((r, i) => [
+                i + 1, r.code, r.name, r.statusLabel,
+                r.isInLatest ? r.latestQtyVal : 0,
+                parseFloat(r.avgPrev.toFixed(2)),
+                r.suggestedOrder,
+                r.status === 'critical' ? 'طلب عاجل فوري'
+                    : r.status === 'medium' ? 'طلب خلال أسبوع'
+                    : 'طلب اعتيادي'
+            ]);
+            const ws4 = XLSX.utils.aoa_to_sheet([orderHeaders, ...orderRows]);
+            ws4['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 22 }, { wch: 22 }];
+            XLSX.utils.book_append_sheet(wb, ws4, 'قائمة الطلبات المقترحة');
+        }
+
+        // ── Sheet 5: حركة الأصناف ──
+        const movHeaders = [
+            'الكود', 'اسم الصنف',
+            ...comparisonPeriods.map((p, i) => `ف${i + 1}: ${p.name}`),
+            'أعلى كمية', 'أدنى كمية', 'متوسط الكميات', 'حركة الصنف'
+        ];
+        const movRows = analysisResults.map(r => {
+            const validQtys = r.periodQtys.filter(q => q !== null);
+            const maxQ = validQtys.length ? Math.max(...validQtys) : 0;
+            const minQ = validQtys.length ? Math.min(...validQtys) : 0;
+            const avgQ = validQtys.length ? parseFloat((validQtys.reduce((a, b) => a + b, 0) / validQtys.length).toFixed(2)) : 0;
+            const mvt  = r.trend === 'up' ? 'ارتفاع' : r.trend === 'down' ? 'انخفاض' : 'ثابت';
+            return [
+                r.code, r.name,
+                ...r.periodQtys.map(q => q !== null ? q : '-'),
+                maxQ, minQ, avgQ, mvt
+            ];
+        });
+        const ws5 = XLSX.utils.aoa_to_sheet([movHeaders, ...movRows]);
+        ws5['!cols'] = [
+            { wch: 14 }, { wch: 30 },
+            ...comparisonPeriods.map(() => ({ wch: 18 })),
+            { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 14 }
+        ];
+        XLSX.utils.book_append_sheet(wb, ws5, 'حركة الأصناف');
+
+        const fileName = `تقرير_مقارنة_المخزون_${now.toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+        showToast('✅ تم تصدير التقرير الاحترافي بنجاح');
     }
 
 </script>
