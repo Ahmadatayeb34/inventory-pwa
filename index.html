@@ -2538,7 +2538,11 @@
                 changePercent = avgPrev > 0 ? (change / avgPrev) * 100 : (latestQtyVal > 0 ? 100 : 0);
 
                 // Trend: compare latest vs previous period
-                const prevPeriodQty = periodQtys.length >= 2 ? (periodQtys[periodQtys.length - 2] !== null ? periodQtys[periodQtys.length - 2] : avgPrev) : avgPrev;
+                let prevPeriodQty = avgPrev;
+                if (periodQtys.length >= 2) {
+                    const prev2 = periodQtys[periodQtys.length - 2];
+                    prevPeriodQty = prev2 !== null ? prev2 : avgPrev;
+                }
                 if      (latestQtyVal > prevPeriodQty * 1.05) trend = 'up';
                 else if (latestQtyVal < prevPeriodQty * 0.95) trend = 'down';
 
@@ -2809,11 +2813,11 @@
             const critHeaders = ['م', 'الكود', 'اسم الصنف', 'الكمية الحالية', 'المتوسط السابق', 'أعلى كمية سابقة', 'نسبة النقص%', 'الكمية المقترحة', 'ملاحظة'];
             const critRows = critical.map((r, i) => [
                 i + 1, r.code, r.name,
-                r.isInLatest ? r.latestQtyVal : 'غير موجود في آخر فترة',
+                r.isInLatest ? r.latestQtyVal : 0,
                 parseFloat(r.avgPrev.toFixed(2)), r.maxPrev,
                 parseFloat(Math.abs(r.changePercent).toFixed(1)),
                 r.suggestedOrder,
-                r.latestQtyVal === 0 ? 'نفاد المخزون — طلب عاجل' : 'نقص حاد — طلب عاجل'
+                !r.isInLatest ? 'غير موجود في آخر فترة — طلب عاجل' : r.latestQtyVal === 0 ? 'نفاد المخزون — طلب عاجل' : 'نقص حاد — طلب عاجل'
             ]);
             const ws3 = XLSX.utils.aoa_to_sheet([critHeaders, ...critRows]);
             ws3['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 30 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 20 }, { wch: 28 }];
