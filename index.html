@@ -1564,7 +1564,7 @@
         if (selectedItemIdx === -1) return;
         const inputField = document.getElementById('inv-input-qty');
         const qtyVal = Number(inputField.value);
-        if (!qtyVal || qtyVal <= 0) {
+        if (isNaN(qtyVal) || qtyVal <= 0) {
             showToast('يرجى إدخال كمية صحيحة أكبر من صفر', 'error');
             return;
         }
@@ -1641,7 +1641,7 @@
             document.getElementById('new-name').focus();
             return;
         }
-        if (inventory.find(x => x.code === code)) {
+        if (code && inventory.find(x => x.code === code)) {
             showToast('هذا الكود موجود مسبقاً في النظام', 'error');
             return;
         }
@@ -2458,7 +2458,7 @@
                     const name  = String(rawName).trim();
                     const group = String(rawGroup).trim() || 'غير محددة';
                     const displayName = name || `غير مُسمّى (${code})`;
-                    if (!name) console.warn(`Comparison import: missing item name for code "${code}"`);
+                    if (!name) console.warn('Comparison import: missing item name for code', code);
                     const qty   = parseFloat(String(rawQty).replace(/[^\d.\-]/g, '')) || 0;
 
                     if (!code) continue;

@@ -437,7 +437,7 @@ function handleFileUpload(evt) {
                 const group = String(rawGroup).trim() || 'غير محددة';
                 // Use a clear fallback label so items are not dropped silently when name is empty
                 const displayName = name || `غير مُسمّى (${code})`;
-                if (!name) console.warn(`Inventory comparison import: missing item name for code "${code}"`);
+                if (!name) console.warn('Inventory comparison import: missing item name for code', code);
                 const qty  = parseFloat(String(rawQty).replace(/[^\d.\-]/g, '')) || 0;
 
                 if (!code) continue; // only skip if code is truly empty
