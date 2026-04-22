@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام الإدارة المتكامل الاحترافي - تطوير أحمد الطيب</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e1b4b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="إدارة المخزون">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1019,8 +1025,17 @@
 </div>
 
 <script>
-    const STORAGE_KEY_INV = 'ims_inventory_data_v2';
+    const STORAGE_KEY_INV    = 'ims_inventory_data_v2';
     const STORAGE_KEY_ORDERS = 'ims_orders_data_v2';
+
+    // ====== HTML Escape Utility (prevents XSS via innerHTML) ======
+    function escHtml(str) {
+        return String(str == null ? '' : str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
     
     let inventory = [];
     let ordersData = { showroom: [], cafe: [] };
@@ -1198,9 +1213,11 @@
     }
 
     function clearAllData() {
-        if (confirm('هل أنت متأكد تماماً من حذف جميع بيانات التطبيق بالكامل (الجرد والطلبات والملاحظات)؟ لا يمكن التراجع عن هذا الإجراء!')) {
+        if (confirm('هل أنت متأكد تماماً من حذف جميع بيانات التطبيق بالكامل (الجرد والطلبات والملاحظات والتتبع والمقارنة)؟ لا يمكن التراجع عن هذا الإجراء!')) {
             localStorage.removeItem(STORAGE_KEY_INV);
             localStorage.removeItem(STORAGE_KEY_ORDERS);
+            localStorage.removeItem(STORAGE_KEY_COMP);
+            localStorage.removeItem(STORAGE_KEY_TRK);
             showToast('تم حذف جميع بيانات التطبيق بنجاح', 'error');
             setTimeout(() => location.reload(), 500); 
         }
@@ -1389,12 +1406,12 @@
                     </button>
                     <span class="print-status-badge hidden text-xs font-bold ${isCompleted ? 'text-green-600' : 'text-orange-500'}">${isCompleted ? '✓ مكتمل' : '⏳ قيد التنفيذ'}</span>
                 </td>
-                <td class="p-3 font-mono font-bold text-slate-700 ${isCompleted ? 'line-through decoration-slate-400' : ''}">${order.number}</td>
-                <td class="p-3 font-bold text-slate-800 ${isCompleted ? 'text-slate-500' : ''}">${order.company}</td>
+                <td class="p-3 font-mono font-bold text-slate-700 ${isCompleted ? 'line-through decoration-slate-400' : ''}">${escHtml(order.number)}</td>
+                <td class="p-3 font-bold text-slate-800 ${isCompleted ? 'text-slate-500' : ''}">${escHtml(order.company)}</td>
                 <td class="p-3 text-xs wrap-text">
-                    <span class="px-2 py-1 rounded bg-white border border-slate-200 text-slate-600 block">${order.type}</span>
+                    <span class="px-2 py-1 rounded bg-white border border-slate-200 text-slate-600 block">${escHtml(order.type)}</span>
                 </td>
-                <td class="p-3 text-xs text-slate-500 wrap-text">${order.notes || '-'}</td>
+                <td class="p-3 text-xs text-slate-500 wrap-text">${escHtml(order.notes || '-')}</td>
                 <td class="p-3 text-center text-slate-500 text-xs font-mono whitespace-nowrap">${formatDateDisplay(order.date)}</td>
                 <td class="p-3 text-center ${daysClass} whitespace-nowrap">
                     <span class="inline-flex items-center justify-center gap-1">${daysDiff}&nbsp;يوم${warningIcon ? ' ' + warningIcon : ''}</span>
@@ -1547,7 +1564,10 @@
         if (selectedItemIdx === -1) return;
         const inputField = document.getElementById('inv-input-qty');
         const qtyVal = Number(inputField.value);
-        if (!qtyVal && qtyVal !== 0) return;
+        if (!qtyVal || qtyVal <= 0) {
+            showToast('يرجى إدخال كمية صحيحة أكبر من صفر', 'error');
+            return;
+        }
 
         if (invMode === 'add') {
             inventory[selectedItemIdx].actualQty += qtyVal;
@@ -1592,8 +1612,8 @@
             tr.className = `hover:bg-blue-50 cursor-pointer transition ${idx === selectedItemIdx ? 'bg-blue-100' : ''}`;
             tr.onclick = () => selectItemInventory(idx);
             tr.innerHTML = `
-                <td class="p-3 font-mono text-slate-500">${item.code}</td>
-                <td class="p-3 font-bold text-slate-700">${item.name}</td>
+                <td class="p-3 font-mono text-slate-500">${escHtml(item.code)}</td>
+                <td class="p-3 font-bold text-slate-700">${escHtml(item.name)}</td>
                 <td class="p-3 text-center text-slate-400 font-mono">${item.sysQty}</td>
                 <td class="p-3 text-center text-brand-900 font-black bg-white/50 rounded">${item.actualQty}</td>
                 <td class="p-3 text-center font-bold ${diffColor} dir-ltr">${diffSign}${diff}</td>
@@ -1612,17 +1632,24 @@
     }
 
     function confirmAddItem() {
-        const code = document.getElementById('new-code').value;
-        const name = document.getElementById('new-name').value;
+        const code = document.getElementById('new-code').value.trim();
+        const name = document.getElementById('new-name').value.trim();
         const sys = Number(document.getElementById('new-sys-qty').value) || 0;
         
-        if (name) {
-            inventory.push({ code, name, sysQty: sys, actualQty: 0, batches: [], roastery: '', notes: '' });
-            document.getElementById('addItemModal').classList.add('hidden');
-            saveAllData();
-            selectItemInventory(inventory.length - 1);
-            showToast('تم إضافة الصنف بنجاح');
+        if (!name) {
+            showToast('يرجى إدخال اسم الصنف', 'error');
+            document.getElementById('new-name').focus();
+            return;
         }
+        if (inventory.find(x => x.code === code)) {
+            showToast('هذا الكود موجود مسبقاً في النظام', 'error');
+            return;
+        }
+        inventory.push({ code, name, sysQty: sys, actualQty: 0, batches: [], roastery: '', notes: '', group: '' });
+        document.getElementById('addItemModal').classList.add('hidden');
+        saveAllData();
+        selectItemInventory(inventory.length - 1);
+        showToast('تم إضافة الصنف بنجاح');
     }
 
     // ========== EXPIRY ==========
@@ -1837,12 +1864,12 @@
             tr.className = `hover:bg-emerald-50 cursor-pointer transition ${idx === selectedItemIdx ? 'bg-emerald-100' : ''}`;
             tr.onclick = () => selectItem(idx, 'notes');
             
-            const roasteryDisplay = item.roastery ? `<span class="text-emerald-700 font-bold"><i class="fa-solid fa-fire-burner text-xs"></i> ${item.roastery}</span>` : '<span class="text-slate-300">-</span>';
-            const notesDisplay = item.notes ? `<span class="text-slate-600 text-xs">${item.notes}</span>` : '<span class="text-slate-300 text-[10px]">لا توجد ملاحظات</span>';
+            const roasteryDisplay = item.roastery ? `<span class="text-emerald-700 font-bold"><i class="fa-solid fa-fire-burner text-xs"></i> ${escHtml(item.roastery)}</span>` : '<span class="text-slate-300">-</span>';
+            const notesDisplay = item.notes ? `<span class="text-slate-600 text-xs">${escHtml(item.notes)}</span>` : '<span class="text-slate-300 text-[10px]">لا توجد ملاحظات</span>';
 
             tr.innerHTML = `
-                <td class="p-3 font-mono text-slate-400 text-xs">${item.code}</td>
-                <td class="p-3 font-bold text-slate-700">${item.name}</td>
+                <td class="p-3 font-mono text-slate-400 text-xs">${escHtml(item.code)}</td>
+                <td class="p-3 font-bold text-slate-700">${escHtml(item.name)}</td>
                 <td class="p-3">${roasteryDisplay}</td>
                 <td class="p-3">${notesDisplay}</td>
             `;
@@ -1853,14 +1880,15 @@
     // ========== SHARED ==========
     function showToast(msg, type='success') {
         const t = document.getElementById('toast');
-        t.innerText = msg;
+        t.textContent = msg;
         t.className = `fixed bottom-5 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl font-bold text-sm transition-all duration-300 z-[100] ${type === 'error' ? 'bg-red-600 text-white' : 'bg-brand-900 text-white'}`;
         t.style.opacity = '1';
         t.style.bottom = '30px';
-        setTimeout(() => {
+        clearTimeout(t._toastTimer);
+        t._toastTimer = setTimeout(() => {
             t.style.opacity = '0';
             t.style.bottom = '5px';
-        }, 2000);
+        }, 2800);
     }
 
     function formatDateDisplay(dateStr) {
@@ -1977,8 +2005,8 @@
                     data.push({
                         'الكود': item.code,
                         'الصنف': item.name,
-                        'المحمصة': item.roastery,
-                        'الملاحظات': item.notes,
+                        'المحمصة': item.roastery || '',
+                        'الملاحظات': item.notes || '',
                         'الكمية بالنظام': item.sysQty,
                         'الكمية الفعلية': item.actualQty,
                         'الفارق': item.actualQty - item.sysQty,
@@ -1991,14 +2019,14 @@
                 data.push({
                     'الكود': item.code,
                     'الصنف': item.name,
-                    'المحمصة': item.roastery,
-                    'الملاحظات': item.notes,
+                    'المحمصة': item.roastery || '',
+                    'الملاحظات': item.notes || '',
                     'الكمية بالنظام': item.sysQty,
                     'الكمية الفعلية': item.actualQty,
                     'الفارق': item.actualQty - item.sysQty,
-                    'تاريخ التحميص': '-',
-                    'تاريخ الانتهاء': '-',
-                    'كمية الدفعة': '-'
+                    'تاريخ التحميص': '',
+                    'تاريخ الانتهاء': '',
+                    'كمية الدفعة': 0
                 });
             }
         });
@@ -2140,6 +2168,26 @@
         document.querySelector('.print-footer').classList.add('hidden');
     });
 
+    // إغلاق النافذة المنبثقة بمفتاح Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('addItemModal');
+            if (modal && !modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+    });
+
+    // تسجيل Service Worker للعمل دون اتصال
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(err => {
+                console.warn('[SW] Registration failed:', err);
+            });
+        });
+    }
+
 
 
     // ======== TRACKING SECTION ========
@@ -2209,11 +2257,11 @@
                 });
 
                 tr.innerHTML = `
-                    <td class="p-3 font-mono font-bold text-brand-900">${item.orderId}</td>
-                    <td class="p-3 font-mono text-slate-700">${item.shipmentNumber}</td>
-                    <td class="p-3 text-center">${statusBadges[item.status] || item.status}</td>
+                    <td class="p-3 font-mono font-bold text-brand-900">${escHtml(item.orderId)}</td>
+                    <td class="p-3 font-mono text-slate-700">${escHtml(item.shipmentNumber)}</td>
+                    <td class="p-3 text-center">${statusBadges[item.status] || escHtml(item.status)}</td>
                     <td class="p-3 text-center">${deliveredBadge}</td>
-                    <td class="p-3 text-right text-xs text-slate-600">${item.notes || '-'}</td>
+                    <td class="p-3 text-right text-xs text-slate-600">${escHtml(item.notes || '-')}</td>
                     <td class="p-3 text-center text-xs text-slate-500">${lastUpdate}</td>
                     <td class="p-3 text-center no-print">
                         <button onclick="editTracking(${actualIdx})" class="px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg font-bold text-xs mr-1 btn-pulse">
@@ -2509,10 +2557,11 @@
     }
 
     function getAllItemCodesMap() {
-        const codes = new Map(); // code -> name (latest wins)
+        // code -> { name, group } (آخر فترة تحدد الاسم والمجموعة)
+        const codes = new Map();
         comparisonPeriods.forEach(p => {
             p.items.forEach(item => {
-                codes.set(item.code, item.name);
+                codes.set(item.code, { name: item.name, group: item.group || 'غير محددة' });
             });
         });
         return codes;
@@ -2532,56 +2581,60 @@
 
         analysisResults = [];
 
-        allCodes.forEach((name, code) => {
-            // Quantity in each period (null = item absent from that period)
+        allCodes.forEach((meta, code) => {
+            const { name, group } = meta;
+
+            // كميات الصنف في كل فترة (null = غير موجود في تلك الفترة)
             const periodQtys = comparisonPeriods.map(p => {
                 const found = p.items.find(i => i.code === code);
                 return found !== undefined ? found.qty : null;
             });
 
-            const latestRaw  = periodQtys[periodQtys.length - 1];
-            const latestQtyVal = latestRaw !== null ? latestRaw : 0;
-            const prevQtys   = periodQtys.slice(0, -1).filter(q => q !== null);
+            const latestRaw    = periodQtys[periodQtys.length - 1];
+            const latestQty    = latestRaw !== null ? latestRaw : 0;
+            const latestAbsent = latestRaw === null;
+            const prevQtys     = periodQtys.slice(0, -1).filter(q => q !== null);
+            const hasHistory   = prevQtys.length > 0;
 
             let status = 'new', statusLabel = 'جديد';
             let statusColor = 'bg-blue-100 text-blue-700';
             let avgPrev = 0, maxPrev = 0, change = 0, changePercent = 0;
             let suggestedOrder = 0, trend = 'stable';
+            let shortageQty = 0, shortagePercent = 0;
 
-            if (prevQtys.length > 0) {
+            if (hasHistory) {
                 avgPrev = prevQtys.reduce((a, b) => a + b, 0) / prevQtys.length;
                 maxPrev = Math.max(...prevQtys);
-                change  = latestQtyVal - avgPrev;
-                changePercent = avgPrev > 0 ? (change / avgPrev) * 100 : (latestQtyVal > 0 ? 100 : 0);
+                change  = latestQty - avgPrev;
+                changePercent = avgPrev > 0 ? (change / avgPrev) * 100 : (latestQty > 0 ? 100 : 0);
 
-                // Trend: compare latest vs previous period
-                let prevPeriodQty = avgPrev;
+                // اتجاه: مقارنة الفترة الأخيرة بالفترة التي قبلها
                 if (periodQtys.length >= 2) {
                     const prev2 = periodQtys[periodQtys.length - 2];
-                    prevPeriodQty = prev2 !== null ? prev2 : avgPrev;
+                    const prevPeriodQty = prev2 !== null ? prev2 : avgPrev;
+                    if      (latestQty > prevPeriodQty * 1.05) trend = 'up';
+                    else if (latestQty < prevPeriodQty * 0.95) trend = 'down';
                 }
-                if      (latestQtyVal > prevPeriodQty * 1.05) trend = 'up';
-                else if (latestQtyVal < prevPeriodQty * 0.95) trend = 'down';
 
-                const shortage        = avgPrev - latestQtyVal;
-                const shortagePercent = avgPrev > 0 ? (shortage / avgPrev) * 100 : 0;
+                shortageQty     = Math.max(0, avgPrev - latestQty);
+                shortagePercent = avgPrev > 0 ? (shortageQty / avgPrev) * 100 : 0;
 
-                if (latestRaw === null || latestQtyVal === 0) {
+                if (latestAbsent || latestQty === 0) {
                     status = 'critical'; statusLabel = 'حرج';
                     statusColor = 'bg-red-100 text-red-700';
                     suggestedOrder = Math.ceil(maxPrev * 1.2);
                 } else if (shortagePercent >= 50) {
                     status = 'critical'; statusLabel = 'حرج';
                     statusColor = 'bg-red-100 text-red-700';
-                    suggestedOrder = Math.ceil((maxPrev - latestQtyVal) * 1.2);
+                    suggestedOrder = Math.ceil((maxPrev - latestQty) * 1.2);
                 } else if (shortagePercent >= 25) {
                     status = 'medium'; statusLabel = 'وسط';
                     statusColor = 'bg-amber-100 text-amber-700';
-                    suggestedOrder = Math.ceil((avgPrev - latestQtyVal) * 1.1);
-                } else if (shortage > 0) {
+                    suggestedOrder = Math.ceil((avgPrev - latestQty) * 1.1);
+                } else if (shortageQty > 0) {
                     status = 'normal'; statusLabel = 'عادي';
                     statusColor = 'bg-emerald-100 text-emerald-700';
-                    suggestedOrder = Math.ceil(shortage);
+                    suggestedOrder = Math.ceil(shortageQty);
                 } else {
                     status = 'ok'; statusLabel = 'مرتفع';
                     statusColor = 'bg-green-100 text-green-700';
@@ -2590,9 +2643,13 @@
             }
 
             analysisResults.push({
-                code, name, periodQtys, latestQtyVal, avgPrev, maxPrev,
-                change, changePercent, status, statusLabel, statusColor,
-                suggestedOrder, trend, isInLatest: latestRaw !== null
+                code, name, group,
+                periodQtys, latestQty, latestAbsent, hasHistory,
+                avgPrev, maxPrev,
+                change, changePercent,
+                shortageQty, shortagePercent,
+                status, statusLabel, statusColor,
+                suggestedOrder, trend
             });
         });
 
@@ -2642,7 +2699,7 @@
             const periodHeaders = comparisonPeriods.map((p, idx) => {
                 const isLatest = idx === comparisonPeriods.length - 1;
                 return `<th class="p-3 text-center whitespace-nowrap ${isLatest ? 'bg-indigo-50 text-indigo-700 border-x border-indigo-100' : 'text-slate-500'}">
-                    ${p.name}<br>
+                    ${escHtml(p.name)}<br>
                     <span class="text-[9px] font-normal opacity-75">${formatDateDisplay(p.date)}</span>
                 </th>`;
             }).join('');
@@ -2650,10 +2707,12 @@
             theadRow.innerHTML = `
                 <th class="p-3 w-24 text-right sticky right-0 bg-slate-50 z-10">الكود</th>
                 <th class="p-3 text-right min-w-[160px] sticky right-24 bg-slate-50 z-10">اسم الصنف</th>
+                <th class="p-3 text-right min-w-[120px]">المجموعة</th>
                 ${periodHeaders}
                 <th class="p-3 text-center whitespace-nowrap w-20">التغيير</th>
-                <th class="p-3 text-center whitespace-nowrap w-16">النسبة</th>
-                <th class="p-3 text-center whitespace-nowrap w-16">الاتجاه</th>
+                <th class="p-3 text-center whitespace-nowrap w-16">النسبة%</th>
+                <th class="p-3 text-center whitespace-nowrap w-16">العجز</th>
+                <th class="p-3 text-center whitespace-nowrap w-16">اتجاه</th>
                 <th class="p-3 text-center whitespace-nowrap w-20">الحالة</th>
                 <th class="p-3 text-center whitespace-nowrap w-28">الكمية المقترحة</th>
             `;
@@ -2663,7 +2722,7 @@
         const search       = compFilter.search.toLowerCase();
         const statusFilter = compFilter.status;
         const filtered = analysisResults.filter(r => {
-            if (search && !r.name.toLowerCase().includes(search) && !r.code.toLowerCase().includes(search)) return false;
+            if (search && !r.name.toLowerCase().includes(search) && !r.code.toLowerCase().includes(search) && !String(r.group || '').toLowerCase().includes(search)) return false;
             if (statusFilter !== 'all' && r.status !== statusFilter) return false;
             if (compFilter.onlyShortages && (r.status === 'ok' || r.status === 'new')) return false;
             return true;
@@ -2688,6 +2747,9 @@
             const changeFmt   = r.change !== 0 ? `${r.change > 0 ? '+' : ''}${r.change.toFixed(1)}` : '0';
             const pctFmt      = Math.abs(r.changePercent) > 0.05
                 ? `${r.change > 0 ? '+' : ''}${r.changePercent.toFixed(1)}%` : '0%';
+            const shortFmt    = r.shortageQty > 0
+                ? `<span class="text-red-600 font-bold">${r.shortageQty.toFixed(1).replace(/\.0$/, '')}</span>`
+                : '<span class="text-slate-300">—</span>';
 
             const rowBg = r.status === 'critical' ? 'bg-red-50 hover:bg-red-100'
                         : r.status === 'medium'   ? 'bg-amber-50 hover:bg-amber-100'
@@ -2705,14 +2767,26 @@
                 ? `<span class="px-2 py-1 rounded-lg text-xs font-black bg-orange-100 text-orange-700 border border-orange-200 whitespace-nowrap">${r.suggestedOrder}</span>`
                 : `<span class="text-slate-300 text-xs">—</span>`;
 
+            const absentNote = r.latestAbsent
+                ? '<div class="text-[9px] text-red-500 font-bold mt-0.5">غير موجود في الفترة الأخيرة</div>'
+                : '';
+            const newNote = !r.hasHistory
+                ? '<div class="text-[9px] text-blue-500 font-bold mt-0.5">صنف جديد — لا يوجد تاريخ سابق</div>'
+                : '';
+
             const tr = document.createElement('tr');
             tr.className = `${rowBg} transition border-b border-slate-100`;
             tr.innerHTML = `
-                <td class="p-3 font-mono text-slate-500 text-[11px] sticky right-0 ${rowBg || 'bg-white'} z-[1]">${r.code}</td>
-                <td class="p-3 font-bold text-slate-800 sticky right-24 ${rowBg || 'bg-white'} z-[1]">${r.name}</td>
+                <td class="p-3 font-mono text-slate-500 text-[11px] sticky right-0 ${rowBg || 'bg-white'} z-[1]">${escHtml(r.code)}</td>
+                <td class="p-3 sticky right-24 ${rowBg || 'bg-white'} z-[1]">
+                    <div class="font-bold text-slate-800 text-xs">${escHtml(r.name)}</div>
+                    ${absentNote}${newNote}
+                </td>
+                <td class="p-3 text-slate-600 text-[11px]">${escHtml(r.group || 'غير محددة')}</td>
                 ${periodCells}
                 <td class="p-3 text-center font-bold ${changeClass}">${changeFmt}</td>
                 <td class="p-3 text-center font-bold ${changeClass} text-[11px]">${pctFmt}</td>
+                <td class="p-3 text-center text-[11px]">${shortFmt}</td>
                 <td class="p-3 text-center">${trendIcon}</td>
                 <td class="p-3 text-center">${statusBadge}</td>
                 <td class="p-3 text-center">${orderBadge}</td>
@@ -2800,72 +2874,75 @@
 
         // ── Sheet 2: مقارنة تفصيلية ──
         const detailHeaders = [
-            'الكود', 'اسم الصنف',
+            'الكود', 'اسم الصنف', 'مجموعة الصنف',
             ...comparisonPeriods.map((p, i) => `ف${i + 1}: ${p.name} (${formatDateDisplay(p.date)})`),
             'المتوسط السابق', 'أعلى كمية سابقة',
-            'التغيير', 'نسبة التغيير%', 'الاتجاه', 'الحالة', 'الكمية المقترحة للطلب'
+            'التغيير', 'نسبة التغيير%',
+            'العجز الكمي', 'نسبة العجز%',
+            'الاتجاه', 'الحالة', 'الكمية المقترحة للطلب'
         ];
         const detailRows = analysisResults.map(r => {
             const trendTxt = r.trend === 'up' ? 'ارتفاع' : r.trend === 'down' ? 'انخفاض' : 'ثابت';
             return [
-                r.code, r.name,
-                ...r.periodQtys.map(q => q !== null ? q : '-'),
-                r.avgPrev > 0 ? parseFloat(r.avgPrev.toFixed(2)) : '-',
-                r.maxPrev > 0 ? r.maxPrev : '-',
+                r.code, r.name, r.group || 'غير محددة',
+                ...r.periodQtys.map(q => q !== null ? q : 0),
+                r.avgPrev > 0 ? parseFloat(r.avgPrev.toFixed(2)) : 0,
+                r.maxPrev,
                 parseFloat(r.change.toFixed(2)),
                 parseFloat(r.changePercent.toFixed(1)),
+                parseFloat(r.shortageQty.toFixed(2)),
+                parseFloat(r.shortagePercent.toFixed(1)),
                 trendTxt, r.statusLabel, r.suggestedOrder
             ];
         });
         const ws2 = XLSX.utils.aoa_to_sheet([detailHeaders, ...detailRows]);
         ws2['!cols'] = [
-            { wch: 14 }, { wch: 30 },
+            { wch: 14 }, { wch: 30 }, { wch: 18 },
             ...comparisonPeriods.map(() => ({ wch: 22 })),
-            { wch: 16 }, { wch: 16 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 20 }
+            { wch: 16 }, { wch: 16 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 22 }
         ];
         XLSX.utils.book_append_sheet(wb, ws2, 'مقارنة تفصيلية');
 
         // ── Sheet 3: النواقص الحرجة ──
         if (critical.length > 0) {
-            const critHeaders = ['م', 'الكود', 'اسم الصنف', 'الكمية الحالية', 'المتوسط السابق', 'أعلى كمية سابقة', 'نسبة النقص%', 'الكمية المقترحة', 'ملاحظة'];
+            const critHeaders = ['م', 'الكود', 'اسم الصنف', 'مجموعة الصنف', 'الكمية الحالية', 'المتوسط السابق', 'أعلى كمية سابقة', 'نسبة النقص%', 'الكمية المقترحة', 'ملاحظة'];
             const critRows = critical.map((r, i) => [
-                i + 1, r.code, r.name,
-                r.isInLatest ? r.latestQtyVal : 0,
+                i + 1, r.code, r.name, r.group || 'غير محددة',
+                r.latestAbsent ? 0 : r.latestQty,
                 parseFloat(r.avgPrev.toFixed(2)), r.maxPrev,
-                parseFloat(Math.abs(r.changePercent).toFixed(1)),
+                parseFloat(r.shortagePercent.toFixed(1)),
                 r.suggestedOrder,
-                !r.isInLatest ? 'غير موجود في آخر فترة — طلب عاجل' : r.latestQtyVal === 0 ? 'نفاد المخزون — طلب عاجل' : 'نقص حاد — طلب عاجل'
+                r.latestAbsent ? 'غير موجود في آخر فترة — طلب عاجل' : r.latestQty === 0 ? 'نفاد المخزون — طلب عاجل' : 'نقص حاد ≥ 50% — طلب عاجل'
             ]);
             const ws3 = XLSX.utils.aoa_to_sheet([critHeaders, ...critRows]);
-            ws3['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 30 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 20 }, { wch: 28 }];
+            ws3['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 30 }, { wch: 18 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 20 }, { wch: 32 }];
             XLSX.utils.book_append_sheet(wb, ws3, '🔴 النواقص الحرجة');
         }
 
-        // ── Sheet 4: قائمة الطلبات المقترحة ──
-        if (needOrder.length > 0) {
-            const priorityOrder = { critical: 0, medium: 1, normal: 2 };
-            const sorted = [...needOrder].sort((a, b) => (priorityOrder[a.status] || 9) - (priorityOrder[b.status] || 9));
-
-            const orderHeaders = ['م', 'الكود', 'اسم الصنف', 'الأولوية', 'الكمية الحالية', 'المتوسط السابق', 'الكمية المقترحة للطلب', 'التصرف المطلوب'];
-            const orderRows = sorted.map((r, i) => [
-                i + 1, r.code, r.name, r.statusLabel,
-                r.isInLatest ? r.latestQtyVal : 0,
-                parseFloat(r.avgPrev.toFixed(2)),
-                r.suggestedOrder,
-                r.status === 'critical' ? 'طلب عاجل فوري'
-                    : r.status === 'medium' ? 'طلب خلال أسبوع'
-                    : 'طلب اعتيادي'
-            ]);
-            const ws4 = XLSX.utils.aoa_to_sheet([orderHeaders, ...orderRows]);
-            ws4['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 22 }, { wch: 22 }];
-            XLSX.utils.book_append_sheet(wb, ws4, 'قائمة الطلبات المقترحة');
-        }
+        // ── Sheet 4: قائمة الطلبات المقترحة (جميع الأصناف) ──
+        const allSorted = [...analysisResults].sort((a, b) => b.suggestedOrder - a.suggestedOrder || a.name.localeCompare(b.name, 'ar'));
+        const orderHeaders = ['م', 'الكود', 'اسم الصنف', 'مجموعة الصنف', 'الأولوية', 'الكمية الحالية', 'العجز الكمي', 'نسبة العجز%', 'الكمية المقترحة للطلب', 'التصرف المطلوب'];
+        const orderRows = allSorted.map((r, i) => [
+            i + 1, r.code, r.name, r.group || 'غير محددة', r.statusLabel,
+            r.latestAbsent ? 0 : r.latestQty,
+            parseFloat(r.shortageQty.toFixed(2)),
+            parseFloat(r.shortagePercent.toFixed(1)),
+            r.suggestedOrder,
+            r.status === 'critical' ? 'طلب عاجل فوري'
+                : r.status === 'medium'   ? 'طلب خلال أسبوع'
+                : r.status === 'normal'   ? 'طلب اعتيادي'
+                : r.status === 'new'      ? 'صنف جديد — يُحدَّد يدوياً'
+                : 'لا حاجة للطلب حالياً'
+        ]);
+        const ws4 = XLSX.utils.aoa_to_sheet([orderHeaders, ...orderRows]);
+        ws4['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 30 }, { wch: 18 }, { wch: 12 }, { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 22 }, { wch: 28 }];
+        XLSX.utils.book_append_sheet(wb, ws4, 'الطلبات المقترحة');
 
         // ── Sheet 5: حركة الأصناف ──
         const movHeaders = [
-            'الكود', 'اسم الصنف',
+            'الكود', 'اسم الصنف', 'مجموعة الصنف',
             ...comparisonPeriods.map((p, i) => `ف${i + 1}: ${p.name}`),
-            'أعلى كمية', 'أدنى كمية', 'متوسط الكميات', 'حركة الصنف'
+            'أعلى كمية', 'أدنى كمية', 'متوسط الكميات', 'حركة الصنف', 'حالة الصنف'
         ];
         const movRows = analysisResults.map(r => {
             const validQtys = r.periodQtys.filter(q => q !== null);
@@ -2874,20 +2951,21 @@
             const avgQ = validQtys.length ? parseFloat((validQtys.reduce((a, b) => a + b, 0) / validQtys.length).toFixed(2)) : 0;
             const mvt  = r.trend === 'up' ? 'ارتفاع' : r.trend === 'down' ? 'انخفاض' : 'ثابت';
             return [
-                r.code, r.name,
-                ...r.periodQtys.map(q => q !== null ? q : '-'),
-                maxQ, minQ, avgQ, mvt
+                r.code, r.name, r.group || 'غير محددة',
+                ...r.periodQtys.map(q => q !== null ? q : 0),
+                maxQ, minQ, avgQ, mvt, r.statusLabel
             ];
         });
         const ws5 = XLSX.utils.aoa_to_sheet([movHeaders, ...movRows]);
         ws5['!cols'] = [
-            { wch: 14 }, { wch: 30 },
+            { wch: 14 }, { wch: 30 }, { wch: 18 },
             ...comparisonPeriods.map(() => ({ wch: 18 })),
-            { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 14 }
+            { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 14 }, { wch: 14 }
         ];
         XLSX.utils.book_append_sheet(wb, ws5, 'حركة الأصناف');
 
-        const fileName = `تقرير_مقارنة_المخزون_${now.toISOString().split('T')[0]}.xlsx`;
+        const today = new Date();
+        const fileName = `تقرير_مقارنة_المخزون_${today.toISOString().split('T')[0]}.xlsx`;
         XLSX.writeFile(wb, fileName);
         showToast('✅ تم تصدير التقرير الاحترافي بنجاح');
     }

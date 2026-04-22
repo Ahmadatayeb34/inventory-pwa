@@ -1,52 +1,53 @@
-const CACHE_NAME = 'inv-app-v1';
-const ASSETS_TO_CACHE = [
-  '.',
-  '.index.html',
-  '.manifest.json',
-  'httpscdn.tailwindcss.com',
-  'httpscdn.sheetjs.comxlsx-latestpackagedistxlsx.full.min.js',
-  'httpscdnjs.cloudflare.comajaxlibsfont-awesome6.4.0cssall.min.css',
-  'httpsfonts.googleapis.comcss2family=Cairowght@300;400;600;700;900&display=swap',
-  'httpscdn-icons-png.flaticon.com512924924514.png'
+// نظام الإدارة المتكامل — Service Worker
+// يستخدم استراتيجية Network First مع Fallback للكاش للموارد الخارجية
+
+const CACHE_NAME = 'inv-app-v3';
+const CORE_ASSETS = [
+    './index.html',
+    './manifest.json'
 ];
 
- تثبيت الـ Service Worker وحفظ الملفات
-self.addEventListener('install', (event) = {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) = {
-        console.log('Opened cache');
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
-  );
-});
-
- تفعيل الـ Service Worker
-self.addEventListener('activate', (event) = {
-  event.waitUntil(
-    caches.keys().then((cacheNames) = {
-      return Promise.all(
-        cacheNames.map((cacheName) = {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
+// تثبيت الـ Service Worker وحفظ الملفات الأساسية
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => {
+            console.log('[SW] Opening cache');
+            return cache.addAll(CORE_ASSETS);
         })
-      );
-    })
-  );
+    );
+    self.skipWaiting();
 });
 
- استدعاء الملفات (Offline First Strategy)
-self.addEventListener('fetch', (event) = {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) = {
-         إذا وجد الملف في الكاش، قم بإرجاعه
-        if (response) {
-          return response;
-        }
-         وإلا قم بجلبه من الإنترنت
-        return fetch(event.request);
-      })
-  );
+// تفعيل الـ Service Worker وحذف الإصدارات القديمة
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames =>
+            Promise.all(
+                cacheNames
+                    .filter(name => name !== CACHE_NAME)
+                    .map(name => caches.delete(name))
+            )
+        )
+    );
+    self.clients.claim();
+});
+
+// استدعاء الملفات — Network First مع Fallback للكاش
+self.addEventListener('fetch', event => {
+    // تجاهل طلبات غير GET والطلبات من chrome-extension
+    if (event.request.method !== 'GET') return;
+    if (!event.request.url.startsWith('http')) return;
+
+    event.respondWith(
+        fetch(event.request)
+            .then(networkResponse => {
+                // حفظ نسخة في الكاش إذا نجح الطلب
+                if (networkResponse && networkResponse.status === 200) {
+                    const cloned = networkResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, cloned));
+                }
+                return networkResponse;
+            })
+            .catch(() => caches.match(event.request))
+    );
 });
